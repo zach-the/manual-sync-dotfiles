@@ -1,0 +1,6 @@
+alias fzf='fzf --height=40% --layout=reverse --border --margin=5%' 
+alias e='exit'  
+alias nv='nvim'
+alias ll='ls -l' 
+alias la='ls -A'
+alias l='ls -CF'
