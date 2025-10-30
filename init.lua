@@ -130,7 +130,7 @@ require("lazy").setup({
 
         comment.setup()
 
-        -- Keymaps for intelligent commenting
+        -- Keymap <C-\> for intelligent commenting
         vim.keymap.set("n", "<C-\\>", function()
           local count = vim.v.count1
           for _ = 1, count do
@@ -203,18 +203,53 @@ require("lazy").setup({
               enable = true,
               set_jumps = true,
               goto_next_start = {
-                ["]f"] = "@function.outer",
-                ["]c"] = "@class.outer",
+                ["]f"] = "@function.outer", -- ]f jumps to the next function
+                ["]c"] = "@class.outer",    -- ]c jumps to the next class
               },
               goto_previous_start = {
-                ["[f"] = "@function.outer",
-                ["[c"] = "@class.outer",
+                ["[f"] = "@function.outer", -- [f jumps to the previous function
+                ["[c"] = "@class.outer",    -- [c jumps to the previous class
               },
             },
           },
         })
       end,
     },
+
+    {
+      "nvim-telescope/telescope.nvim",
+      tag = "0.1.8",
+      dependencies = { "nvim-lua/plenary.nvim" },
+      config = function()
+        local telescope = require("telescope")
+        local builtin = require("telescope.builtin")
+
+        telescope.setup({
+          defaults = {
+            prompt_prefix = "🔍 ",
+            selection_caret = " ",
+            sorting_strategy = "ascending",
+            layout_config = {
+              prompt_position = "top",
+            },
+            mappings = {
+              i = {
+                ["<C-j>"] = "move_selection_next",
+                ["<C-k>"] = "move_selection_previous",
+              },
+            },
+          },
+        })
+
+        -- Keymaps for quick access
+        local map = vim.keymap.set
+        map("n", "<leader>ff", builtin.find_files, { desc = "Find files" })
+        map("n", "<leader>fg", builtin.live_grep, { desc = "Live grep" })
+        map("n", "<leader>fb", builtin.buffers, { desc = "Find buffers" })
+        map("n", "<leader>fh", builtin.help_tags, { desc = "Find help" })
+      end,
+    },
+
 
     {
       "folke/noice.nvim",
