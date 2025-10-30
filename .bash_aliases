@@ -1,5 +1,4 @@
-alias fzf='fzf --height=40% --layout=reverse --border --margin=5%' 
-alias e='exit'  
+alias fzf='fzf --height=40% --layout=reverse --border --margin=5% --bind "ctrl-j:down,ctrl-k:up"'alias e='exit'  
 alias nv='nvim'
 alias ll='ls -l' 
 alias la='ls -A'
