@@ -56,6 +56,7 @@ vim.o.expandtab = true
 vim.o.shiftwidth = 4
 vim.o.tabstop = 4
 vim.o.softtabstop = 4
+vim.o.clipboard = "unnamedplus"
 
 -- Better up/down ------------------------------------------------------------
 vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
@@ -287,4 +288,4 @@ require("lazy").setup({
   checker = { enabled = true, notify = false },
   change_detection = { enabled = true, notify = false },
   ui = { wrap = true },
-})
+}
