@@ -282,6 +282,59 @@ require("lazy").setup({
         words = { enabled = true },
       },
     },
+      
+    {
+      "nvim-lualine/lualine.nvim",
+      config = function()
+        local config = {
+          options = {
+            theme = "gruvbox",
+            component_separators = "",
+            section_separators = "",
+          },
+          sections = {
+            lualine_a = {
+              {
+                "mode",
+                fmt = function(s)
+                  local map = {
+                    NORMAL = "N", INSERT = "I", VISUAL = "V", ["V-LINE"] = "VL",
+                    REPLACE = "R", COMMAND = "!", TERMINAL = "T",
+                  }
+                  return map[s] or s
+                end,
+              },
+            },
+            lualine_b = {
+              { "branch", icon = "" },
+            },
+            lualine_c = {
+              { "filename", path = 1 },
+            },
+            lualine_x = {
+              { "diagnostics", sources = { "nvim_diagnostic" } },
+              {
+                function()
+                  return "lines:" .. vim.api.nvim_buf_line_count(0)
+                end,
+              },
+              { "progress" },   -- percentage through the file
+              { "location" },   -- current line:column
+              { "fileformat", fmt = string.upper },
+            },
+            lualine_y = {},
+            lualine_z = {},
+          },
+          inactive_sections = {
+            lualine_a = {}, lualine_b = {}, lualine_y = {},
+            lualine_z = {}, lualine_c = {}, lualine_x = {},
+          },
+        }
+
+        require("lualine").setup(config)
+      end,
+    },
+    -- end of plugins
   },
 
   -- General lazy.nvim settings
