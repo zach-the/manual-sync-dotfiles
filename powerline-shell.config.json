@@ -1,0 +1,15 @@
+{
+  "segments": [
+    "cwd",
+    "git",
+    "newline",
+    "root"
+  ],
+  "mode": "patched",
+  "cwd": {
+    "max_depth": 6,
+    "max_dir_size": 10,
+    "full_cwd": "true"
+  },
+  "theme": "gruvbox"
+}
