@@ -33,6 +33,20 @@ vim.opt.rtp:prepend(lazypath)
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
+-- xsel for clipboard --------------------------------------------------------
+vim.g.clipboard = {
+  name = 'xsel',
+  copy = {
+    ['+'] = 'xsel --clipboard --input',
+    ['*'] = 'xsel --primary --input',
+  },
+  paste = {
+    ['+'] = 'xsel --clipboard --output',
+    ['*'] = 'xsel --primary --output',
+  },
+  cache_enabled = 0,
+}
+
 -- Statusline ----------------------------------------------------------------
 vim.o.statusline = table.concat({
   " %<%F",
@@ -68,18 +82,34 @@ vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { desc = "Up",
 local macro_group = vim.api.nvim_create_augroup("macro", { clear = true })
 local cursorline = nil
 
-vim.api.nvim_create_autocmd("RecordingEnter", {
+local function get_hl_color(name, key) -- helper function to reliably get the theme's red color
+  local hl = vim.api.nvim_get_hl(0, { name = name })
+  local color = hl[key]
+
+  if color then
+    return string.format("#%06x", color)
+  elseif hl.link then
+    return get_hl_color(hl.link, key)
+  end
+
+  return nil 
+end
+
+vim.api.nvim_create_autocmd("RecordingEnter", { -- change the line to red
   group = macro_group,
   callback = function()
+    local theme_red = get_hl_color("Error", "fg")
+    local recording_color = theme_red or "#cc241d" 
+    local text_color = theme_background or "#1d2021"
     cursorline = vim.api.nvim_get_hl(0, { name = "CursorLine" })
-    vim.api.nvim_set_hl(0, "CursorLine", { bg = "#cc241d", fg = "#1d2021" })
+    vim.api.nvim_set_hl(0, "CursorLine", { bg = recording_color, fg = text_color })
   end,
 })
 
-vim.api.nvim_create_autocmd("RecordingLeave", {
+vim.api.nvim_create_autocmd("RecordingLeave", { -- restore the original line color
   group = macro_group,
   callback = function()
-    if cursorline ~= nil then
+    if cursorline then
       vim.api.nvim_set_hl(0, "CursorLine", cursorline)
     end
   end,
@@ -102,23 +132,11 @@ require("lazy").setup({
     "tpope/vim-sleuth",
 
     {
-      "ellisonleao/gruvbox.nvim",
+      "sonph/onehalf",
       priority = 1000,
       config = function()
-        require("gruvbox").setup({
-          undercurl = true,
-          underline = true,
-          bold = true,
-          italic = {
-            strings = true,
-            comments = true,
-            operators = false,
-            folds = true,
-          },
-          contrast = "medium",
-          transparent_mode = false,
-        })
-        vim.cmd.colorscheme("gruvbox")
+        vim.opt.rtp:append(vim.fn.stdpath("data") .. "/lazy/onehalf/vim")
+        vim.cmd.colorscheme("onehalfdark")
       end,
     },
 
@@ -171,53 +189,6 @@ require("lazy").setup({
     },
 
     {
-      "nvim-treesitter/nvim-treesitter",
-      build = ":TSUpdate",
-      config = function()
-        local ok, configs = pcall(require, "nvim-treesitter.configs")
-        if not ok then
-          vim.notify("nvim-treesitter not available", vim.log.levels.WARN)
-          return
-        end
-        configs.setup({
-          highlight = { enable = true },
-          indent = { enable = true },
-          ensure_installed = {
-            "bash", "c", "diff", "html", "javascript", "json",
-            "lua", "markdown", "markdown_inline", "python",
-            "query", "regex", "toml", "tsx", "typescript",
-            "vim", "vimdoc", "yaml",
-          },
-        })
-      end,
-    },
-
-    {
-      "nvim-treesitter/nvim-treesitter-textobjects",
-      dependencies = { "nvim-treesitter/nvim-treesitter" },
-      config = function()
-        local ok, configs = pcall(require, "nvim-treesitter.configs")
-        if not ok then return end
-        configs.setup({
-          textobjects = {
-            move = {
-              enable = true,
-              set_jumps = true,
-              goto_next_start = {
-                ["]f"] = "@function.outer", -- ]f jumps to the next function
-                ["]c"] = "@class.outer",    -- ]c jumps to the next class
-              },
-              goto_previous_start = {
-                ["[f"] = "@function.outer", -- [f jumps to the previous function
-                ["[c"] = "@class.outer",    -- [c jumps to the previous class
-              },
-            },
-          },
-        })
-      end,
-    },
-
-    {
       "nvim-telescope/telescope.nvim",
       tag = "0.1.8",
       dependencies = { "nvim-lua/plenary.nvim" },
@@ -251,26 +222,6 @@ require("lazy").setup({
       end,
     },
 
-
-    {
-      "folke/noice.nvim",
-      dependencies = { "MunifTanjim/nui.nvim" },
-      config = function()
-        require("noice").setup({
-          notify = { enabled = true },
-          presets = {
-            bottom_search = false,
-            command_palette = true,
-            long_message_to_split = true,
-          },
-        })
-
-        local map = vim.keymap.set
-        map("n", "<leader>n", "<cmd>Noice history<cr>", { desc = "Notification History" })
-        map("n", "<leader>un", "<cmd>Noice dismiss<cr>", { desc = "Dismiss All Notifications" })
-      end,
-    },
-
     {
       "folke/snacks.nvim",
       opts = {
@@ -286,9 +237,9 @@ require("lazy").setup({
     {
       "nvim-lualine/lualine.nvim",
       config = function()
+        vim.opt.rtp:append(vim.fn.stdpath("data") .. "/lazy/onehalf/vim")
         local config = {
           options = {
-            theme = "gruvbox",
             component_separators = "",
             section_separators = "",
           },
@@ -341,4 +292,4 @@ require("lazy").setup({
   checker = { enabled = true, notify = false },
   change_detection = { enabled = true, notify = false },
   ui = { wrap = true },
-}
+})
