@@ -1,15 +1,16 @@
 {
   "segments": [
-    "cwd",
+    "username",
+    {
+      "type": "stdout",
+      "command": ["pwd"],
+      "fg_color": 0,
+      "bg_color": 2
+    },
     "git",
     "newline",
     "root"
   ],
   "mode": "patched",
-  "cwd": {
-    "max_depth": 6,
-    "max_dir_size": 10,
-    "full_cwd": "true"
-  },
-  "theme": "gruvbox"
+  "theme": "basic"
 }
