@@ -1,4 +1,3 @@
-
 # ~/.bashrc
 
 # Only run interactively
@@ -20,8 +19,8 @@ fi
 # --- History Settings ---
 HISTCONTROL=ignoreboth
 shopt -s histappend
-HISTSIZE=1000
-HISTFILESIZE=2000
+HISTSIZE=3000
+HISTFILESIZE=10000
 shopt -s checkwinsize
 shopt -s direxpand
 
@@ -61,4 +60,11 @@ bind "set show-all-if-ambiguous on"
 bind "set menu-complete-display-prefix on"
 bind "set completion-ignore-case on"
 
-[
+# --- Time Zone Fix ---
+export TZ='America/Denver'
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+if [[ -f /home/zb900042/toolbox/setup/toolboxrc ]]; then
+    source /home/zb900042/toolbox/setup/toolboxrc
+fi
