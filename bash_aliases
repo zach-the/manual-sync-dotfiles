@@ -69,7 +69,7 @@ zd ()
         sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
         rg -v "Common\ subdirectories" | \
         # The -- tells rg that "FILE:" is a pattern, not a flag
-        rg --color=always -- "FILE:|Only in |$" | \
+        rg --color=always -- "FILE:.*|Only in |$" | \
         rg -v "Only in"
 }
 
@@ -88,6 +88,6 @@ zd_with_shadow ()
         sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
         rg -v "Common\ subdirectories" | \
         # The -- tells rg that "FILE:" is a pattern, not a flag
-        rg --color=always -- "FILE:|Only in |$" | \
+        rg --color=always -- "FILE:.*|Only in .*|$" | \
         rg -v "Only in"
 }
