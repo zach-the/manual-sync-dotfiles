@@ -8,13 +8,8 @@ if [ -f ~/.bash_aliases ]; then
 fi
     
 # --- Path Exports ---
-export PATH="$HOME/.local/bin:$HOME/.local/kitty/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 export TERM=xterm-256color
-
-# Safer tmux alias (only if file exists)
-if [[ -x ~/.config/tmux/TMUX ]]; then
-    alias tmux='~/.config/tmux/TMUX'
-fi
 
 # --- History Settings ---
 HISTCONTROL=ignoreboth
@@ -46,13 +41,6 @@ else
     PS1='[\u@\h \W]\$ '
 fi
 
-# If xterm, set window title
-case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;\u@\h: \w\a\]$PS1"
-    ;;
-esac
-
 # --- Key Bindings ---
 bind 'TAB:menu-complete'
 bind '"\e[Z":menu-complete-backward'
@@ -65,6 +53,8 @@ export TZ='America/Denver'
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
-if [[ -f /home/zb900042/toolbox/setup/toolboxrc ]]; then
-    source /home/zb900042/toolbox/setup/toolboxrc
-fi
+[ -f /home/zb900042/toolbox/setup/toolboxrc ] && source /home/zb900042/toolbox/setup/toolboxrc
+
+[ -f /home/zb900042/.brcm_aliases ] && source /home/zb900042/.brcm_vars
+
+clear

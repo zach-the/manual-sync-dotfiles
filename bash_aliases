@@ -1,6 +1,7 @@
 # --- Aliases ---
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
+alias lg='ls -lrt | rg'
 alias zg='rg -z'
 alias rgs='rg -S'
 alias zgs='rg -z -S'
@@ -18,6 +19,7 @@ alias egrep='egrep --color=auto'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history | tail -n1 | sed -e "s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//")"'
 alias py='python3'
 alias tl='tail -Fn 40'
+alias tm='tmux a'
 
 # Safer fzf alias (use function)
 fzf() {
@@ -33,4 +35,29 @@ d() {
     fi
     cd "$1" || return 1
     ls -lrt
+}
+
+# --- make a directory and go to it ---
+md() {
+    if [[ -n "$2" ]]; then
+        echo "all arguments after the first argument are being ignored"
+    fi
+    if [[ -n "$1" ]]; then
+        mkdir -p $1
+        cd $1
+        ls -lrt
+        return 0
+    else
+        echo "no arguments supplied. doing nothing"
+        return 1
+    fi
+}
+
+# --- to easily diff two directories ---
+zd() {
+    if [[ -z "$2" ]]; then
+        echo "you need 2 arguments"
+        return 0
+    fi
+    diff -r -y --suppress-common-lines -W $(tput cols) --exclude="*def" --exclude="eco?.tcl" --exclude="*csv" --exclude="*log" --exclude="*rpt" --expand-tabs $1 $2 | rg -v "Common\ subdirectories" | rg --color=always 'diff.*--expand-tabs|Only in |$' | rg -v "Only in"
 }
