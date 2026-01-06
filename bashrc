@@ -3,10 +3,6 @@
 # Only run interactively
 [[ $- != *i* ]] && return
 
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
-    
 # --- Path Exports ---
 export PATH="$HOME/.local/bin:$PATH"
 export TERM=xterm-256color
@@ -51,10 +47,12 @@ bind "set completion-ignore-case on"
 # --- Time Zone Fix ---
 export TZ='America/Denver'
 
+[ -f ~/.bash_aliases ] && source ~/.bash_aliases
+    
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
 [ -f /home/zb900042/toolbox/setup/toolboxrc ] && source /home/zb900042/toolbox/setup/toolboxrc
 
-[ -f /home/zb900042/.brcm_aliases ] && source /home/zb900042/.brcm_vars
+[ -f /home/zb900042/.local_aliases ] && source /home/zb900042/.local_aliases
 
 clear

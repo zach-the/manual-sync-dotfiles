@@ -54,10 +54,40 @@ md() {
 }
 
 # --- to easily diff two directories ---
-zd() {
+zd ()
+{ 
     if [[ -z "$2" ]]; then
-        echo "you need 2 arguments"
-        return 0
-    fi
-    diff -r -y --suppress-common-lines -W $(tput cols) --exclude="*def" --exclude="eco?.tcl" --exclude="*csv" --exclude="*log" --exclude="*rpt" --expand-tabs $1 $2 | rg -v "Common\ subdirectories" | rg --color=always 'diff.*--expand-tabs|Only in |$' | rg -v "Only in"
+        echo "you need 2 arguments";
+        return 0;
+    fi;
+
+    diff -r -y --suppress-common-lines -W $(tput cols) \
+        --exclude="*def" --exclude="eco?.tcl" --exclude="*csv" \
+        --exclude="*log" --exclude="*rpt" --exclude="*\.shadow*" --expand-tabs "$1" "$2" | \
+        # This sed captures the last two space-separated strings (the paths) 
+        # on lines starting with 'diff'
+        sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
+        rg -v "Common\ subdirectories" | \
+        # The -- tells rg that "FILE:" is a pattern, not a flag
+        rg --color=always -- "FILE:|Only in |$" | \
+        rg -v "Only in"
+}
+
+zd_with_shadow ()
+{ 
+    if [[ -z "$2" ]]; then
+        echo "you need 2 arguments";
+        return 0;
+    fi;
+
+    diff -r -y --suppress-common-lines -W $(tput cols) \
+        --exclude="*def" --exclude="eco?.tcl" --exclude="*csv" \
+        --exclude="*log" --exclude="*rpt" --expand-tabs "$1" "$2" | \
+        # This sed captures the last two space-separated strings (the paths) 
+        # on lines starting with 'diff'
+        sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
+        rg -v "Common\ subdirectories" | \
+        # The -- tells rg that "FILE:" is a pattern, not a flag
+        rg --color=always -- "FILE:|Only in |$" | \
+        rg -v "Only in"
 }
