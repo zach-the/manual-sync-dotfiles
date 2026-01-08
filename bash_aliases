@@ -20,6 +20,7 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 alias py='python3'
 alias tl='tail -Fn 40'
 alias tm='tmux a'
+alias cp='cp -a'
 
 # Safer fzf alias (use function)
 fzf() {
@@ -69,10 +70,9 @@ zd ()
         sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
         rg -v "Common\ subdirectories" | \
         # The -- tells rg that "FILE:" is a pattern, not a flag
-        rg --color=always -- "FILE:.*|Only in |$" | \
-        rg -v "Only in"
+        rg --color=always -- "FILE:.*|Only in |$" 
 }
-
+# --- same as above, but this one allows you to diff with a .shadow/ directory ---
 zd_with_shadow ()
 { 
     if [[ -z "$2" ]]; then
@@ -88,6 +88,5 @@ zd_with_shadow ()
         sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
         rg -v "Common\ subdirectories" | \
         # The -- tells rg that "FILE:" is a pattern, not a flag
-        rg --color=always -- "FILE:.*|Only in .*|$" | \
-        rg -v "Only in"
+        rg --color=always -- "FILE:.*|Only in .*|$" 
 }
