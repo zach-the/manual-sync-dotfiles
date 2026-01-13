@@ -1,6 +1,5 @@
 # --- Theme ---
-# This is my custom theme. copy it from ~/manual-sync-dotfiles/ghostty-zach-onehalf-dark to 
-# /Applications/Ghostty.app/Contents/Resources/ghostty/themes/Zach One Half Dark
+# ln -s ~/manual-sync-dotfiles/onehalf-dark-ghostty-zach /Applications/Ghostty.app/Contents/Resources/ghostty/themes/Zach\ One\ Half\ Dark
 theme = Zach One Half Dark
 keybind = cmd+shift+,=reload_config
 
