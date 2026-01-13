@@ -45,6 +45,7 @@ keybind = alt+k=goto_split:top
 keybind = alt+j=goto_split:bottom
 keybind = alt+minus=new_split:down
 keybind = alt+backslash=new_split:right
+keybind = alt+w=close_surface
 
 # --- Tab Navigation ---
 keybind = ctrl+shift+1=goto_tab:1

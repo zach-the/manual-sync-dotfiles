@@ -1,5 +1,7 @@
 {
   "segments": [
+    "virtual_env",
+    "ssh",
     "username",
     {
       "type": "stdout",
