@@ -8,7 +8,7 @@ keybind = cmd+shift+,=reload_config
 shell-integration = detect
 
 # --- Font ---
-font-family = "JetBrainsMono Nerd Font Mono"
+font-family = "JetBrainsMono Nerd Font Mono" 
 font-size = 12
 
 # --- Window Size ---
@@ -26,6 +26,8 @@ keybind = ctrl+k=text:\x1b[A
 keybind = ctrl+j=text:\x1b[B
 keybind = ctrl+h=text:\x1b[D
 keybind = ctrl+l=text:\x1b[C
+keybind = ctrl+shift+k=scroll_page_fractional:-0.3
+keybind = ctrl+shift+j=scroll_page_fractional:0.3
 
 # --- Word Navigation using Native Actions ---
 keybind = ctrl+alt+h=esc:b

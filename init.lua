@@ -128,7 +128,7 @@ vim.api.nvim_create_autocmd("RecordingLeave", { -- restore the original line col
 
 require("lazy").setup({
   spec = {
-    "psliwka/vim-smoothie",
+    -- "psliwka/vim-smoothie",
     "tpope/vim-sleuth",
 
     {
