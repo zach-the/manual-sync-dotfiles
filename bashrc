@@ -21,11 +21,16 @@ if [ -x /usr/bin/dircolors ]; then
     eval "$(dircolors -b ~/.dircolors 2>/dev/null || dircolors -b)"
 fi
 
-# --- Prompt ---
+# --- Prompt & Tab Title ---
 # Only run this if the terminal supports colors and powerline-shell is installed
 if command -v powerline-shell &>/dev/null && [[ $TERM != linux ]]; then
     function _update_ps1() {
+        # 1. Generate the Powerline Prompt
         PS1=$(powerline-shell $?)
+        
+        # 2. Set the Ghostty Tab Title (Current Directory)
+        # ${PWD/#$HOME/~} replaces /home/user with ~ to save space
+        printf "\033]2;%s\007" "${PWD/#$HOME/~}"
     }
 
     # Append _update_ps1 to PROMPT_COMMAND if not already present
@@ -33,9 +38,17 @@ if command -v powerline-shell &>/dev/null && [[ $TERM != linux ]]; then
         PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
     fi
 else
-    # fallback prompt
+    # Fallback prompt (if powerline isn't installed)
     PS1='[\u@\h \W]\$ '
+    
+    # Fallback title setting
+    case "$TERM" in
+    xterm*|rxvt*|screen*|ghostty*)
+        PROMPT_COMMAND='printf "\033]2;%s\007" "${PWD/#$HOME/~}"; '"$PROMPT_COMMAND"
+        ;;
+    esac
 fi
+
 
 # --- Key Bindings ---
 bind 'TAB:menu-complete'

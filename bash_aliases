@@ -18,7 +18,7 @@ alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history | tail -n1 | sed -e "s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//")"'
 alias py='python3'
-alias tl='tail -Fn 40'
+alias tl='tail -Fn 70'
 alias tm='tmux a'
 alias cp='cp -a'
 
@@ -89,4 +89,11 @@ zd_with_shadow ()
         rg -v "Common\ subdirectories" | \
         # The -- tells rg that "FILE:" is a pattern, not a flag
         rg --color=always -- "FILE:.*|Only in .*|$" 
+}
+
+qcursor_ssh_start () {
+    cd /project/priest_4/giant/giant-2025.7.2/user/zb900042/PN99.0.LIB1.fp17.23Oct2025.dft.251025/impl/broadcom_cloud_noncritical_zb900042/
+    so ~/.junklog /tools/ictools/bin/qcursor --ssh-container ./
+    echo "started qcursordb"
+    cd .qcursordata
 }
