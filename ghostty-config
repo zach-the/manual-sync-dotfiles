@@ -17,8 +17,10 @@ macos-titlebar-style = tabs
 
 # --- Behavior ---
 copy-on-select = clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
 focus-follows-mouse = true
 confirm-close-surface = false
+scrollback-limit = 30000
 
 # --- Navigation (HJKL to Arrows) ---
 keybind = ctrl+k=text:\x1b[A
