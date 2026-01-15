@@ -21,6 +21,8 @@ alias py='python3'
 alias tl='tail -Fn 70'
 alias tm='tmux a'
 alias cp='cp -a'
+alias lg='ls -lrga | rg'
+alias nvs='nv -O'
 
 # Safer fzf alias (use function)
 fzf() {

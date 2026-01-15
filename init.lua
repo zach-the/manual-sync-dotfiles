@@ -57,8 +57,6 @@ vim.o.statusline = table.concat({
 
 -- Basic settings ------------------------------------------------------------
 vim.o.number = true
-vim.o.cursorcolumn = true
-vim.o.cursorline = true
 vim.o.relativenumber = true
 vim.o.showmatch = true
 vim.o.wrap = false
@@ -138,6 +136,12 @@ require("lazy").setup({
         vim.opt.rtp:append(vim.fn.stdpath("data") .. "/lazy/onehalf/vim")
         vim.cmd.colorscheme("onehalfdark")
       end,
+    },
+
+    {
+      'tribela/transparent.nvim',
+      event = 'VimEnter',
+      config = true,
     },
 
     {
@@ -225,7 +229,7 @@ require("lazy").setup({
     {
       "folke/snacks.nvim",
       opts = {
-        indent = { enabled = true },
+        -- indent = { enabled = true }, -- this is the one that creates the long vertical pipes
         input = { enabled = true },
         notifier = { enabled = false },
         scope = { enabled = true },
