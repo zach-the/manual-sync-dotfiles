@@ -69,6 +69,9 @@ vim.o.shiftwidth = 4
 vim.o.tabstop = 4
 vim.o.softtabstop = 4
 vim.o.clipboard = "unnamedplus"
+vim.o.termguicolors = true
+vim.o.cursorline = true
+vim.o.cursorcolumn = true
 
 -- Better up/down ------------------------------------------------------------
 vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
@@ -76,40 +79,47 @@ vim.keymap.set({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { desc = "Do
 vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
 vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
 
--- Turn the line bar red when recording a macro ------------------------------
+-- Make macro recording purple -----------------------------------------------
+-- Create the group for our autocommands
 local macro_group = vim.api.nvim_create_augroup("macro", { clear = true })
-local cursorline = nil
 
-local function get_hl_color(name, key) -- helper function to reliably get the theme's red color
+-- Helper to get colors safely
+local function get_hl_color(name, key)
   local hl = vim.api.nvim_get_hl(0, { name = name })
+  if not hl or vim.tbl_isempty(hl) then return nil end
+  
   local color = hl[key]
-
   if color then
     return string.format("#%06x", color)
   elseif hl.link then
     return get_hl_color(hl.link, key)
   end
-
   return nil 
 end
 
-vim.api.nvim_create_autocmd("RecordingEnter", { -- change the line to red
+vim.api.nvim_create_autocmd("RecordingEnter", {
   group = macro_group,
   callback = function()
-    local theme_red = get_hl_color("Error", "fg")
-    local recording_color = theme_red or "#cc241d" 
-    local text_color = theme_background or "#1d2021"
-    cursorline = vim.api.nvim_get_hl(0, { name = "CursorLine" })
-    vim.api.nvim_set_hl(0, "CursorLine", { bg = recording_color, fg = text_color })
+    local text_color = get_hl_color("Normal", "fg") or "#1d2021"
+    vim.api.nvim_set_hl(0, "MacroLine", { bg = "#c678dd", fg = text_color, bold = true })
+    vim.opt_local.winhighlight = "CursorLine:MacroLine"
   end,
 })
 
-vim.api.nvim_create_autocmd("RecordingLeave", { -- restore the original line color
+vim.api.nvim_create_autocmd("RecordingLeave", {
   group = macro_group,
   callback = function()
-    if cursorline then
-      vim.api.nvim_set_hl(0, "CursorLine", cursorline)
-    end
+    -- Simply remove the window override. 
+    -- Neovim falls back to the standard (transparent) CursorLine.
+    vim.opt_local.winhighlight = ""
+  end,
+})
+
+-- Make matches blue --------------------------------------------------------
+vim.api.nvim_create_autocmd("ColorScheme", {
+  pattern = "*",
+  callback = function()
+    vim.api.nvim_set_hl(0, "CurSearch", { bg = "#61afef", fg = "#FFFFFF" })
   end,
 })
 
