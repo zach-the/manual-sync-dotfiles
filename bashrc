@@ -66,6 +66,6 @@ export TZ='America/Denver'
 
 [ -f /home/zb900042/toolbox/setup/toolboxrc ] && source /home/zb900042/toolbox/setup/toolboxrc
 
-[ -f /home/zb900042/.local_aliases ] && source /home/zb900042/.local_aliases
+[ -f ~/.local_aliases ] && source ~/.local_aliases
 
 clear

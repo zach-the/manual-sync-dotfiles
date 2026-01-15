@@ -23,6 +23,7 @@ alias tm='tmux a'
 alias cp='cp -a'
 alias lg='ls -lrga | rg'
 alias nvs='nv -O'
+alias work='ssh -Y zb900042@lvnvda8240.lvn.broadcom.net'
 
 # Safer fzf alias (use function)
 fzf() {
