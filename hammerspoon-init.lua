@@ -1,9 +1,25 @@
 -- Define Hyper: Control + Alt + Command + Shift
 local hyper = {"ctrl", "alt", "cmd", "shift"}
 
+-- Helper function to focus and move a specific window
+local function moveSpecificWindow(win)
+    if not win then
+        hs.alert.show("Error: New Kitty window not found.")
+        return
+    end
+
+    local mouseScreen = hs.mouse.getCurrentScreen()
+    if mouseScreen then
+        win:moveToScreen(mouseScreen)
+        win:focus() -- Force focus on the current window/Space
+    end
+end
+
+
 -- ===================================
 -- Ghostty: Hyper + T (New Terminal Window)
 -- ===================================
+
 hs.hotkey.bind(hyper, "T", function()
     local app = hs.application.get("Ghostty")
     
@@ -25,9 +41,11 @@ hs.hotkey.bind(hyper, "T", function()
     end)
 end)
 
+
 -- ===================================
 -- Chrome: Hyper + N (New Browser Window)
 -- ===================================
+
 hs.hotkey.bind(hyper, "N", function()
     local app = hs.application.get("Google Chrome")
     
