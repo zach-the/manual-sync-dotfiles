@@ -7,7 +7,8 @@ keybind = cmd+shift+,=reload_config
 shell-integration = detect
 
 # --- Font ---
-font-family = "JetBrainsMono Nerd Font Mono" 
+font-thicken = true
+font-family = "JetBrainsMono Nerd Font Mono"
 font-size = 12
 
 # --- Appearance ---
