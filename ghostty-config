@@ -5,6 +5,8 @@ keybind = cmd+shift+,=reload_config
 
 # --- Get Tab Title From SSH ---
 shell-integration = detect
+window-inherit-working-directory = false
+working-directory = home
 
 # --- Font ---
 font-thicken = true
