@@ -18,7 +18,7 @@ window-width = 160
 window-height = 45
 macos-titlebar-style = tabs
 background-opacity = 0.9
-background-blur-radius = 16
+background-blur-radius = 24
 
 # --- Behavior ---
 copy-on-select = clipboard
