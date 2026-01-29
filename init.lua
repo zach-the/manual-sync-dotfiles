@@ -72,6 +72,7 @@ vim.o.clipboard = "unnamedplus"
 vim.o.termguicolors = true
 vim.o.cursorline = true
 vim.o.cursorcolumn = true
+vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Better up/down ------------------------------------------------------------
 vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
@@ -119,7 +120,7 @@ vim.api.nvim_create_autocmd("RecordingLeave", {
 vim.api.nvim_create_autocmd("ColorScheme", {
   pattern = "*",
   callback = function()
-    vim.api.nvim_set_hl(0, "CurSearch", { bg = "#61afef", fg = "#FFFFFF" })
+    vim.api.nvim_set_hl(0, "CurSearch", { bg = "#61afef", fg = "#dcdfe4" })
   end,
 })
 
@@ -274,7 +275,20 @@ require("lazy").setup({
               { "branch", icon = "" },
             },
             lualine_c = {
-              { "filename", path = 1 },
+              {
+                "filename",
+                path = 2, -- Absolute path (as discussed)
+                
+                -- Dynamic color logic
+                color = function()
+                  -- Check if the buffer is modified
+                  local is_modified = vim.bo.modified
+                  
+                  -- Return specific hex color if modified, otherwise use default (nil)
+                  -- '#ff9e64' is a bright orange. You can change this to any hex code.
+                  return { fg = is_modified and "#e06c75" or nil, gui = is_modified and "bold" or nil }
+                end,
+              },
             },
             lualine_x = {
               { "diagnostics", sources = { "nvim_diagnostic" } },
