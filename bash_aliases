@@ -24,6 +24,7 @@ alias cp='cp -a'
 alias lg='ls -lrga | rg'
 alias nvs='nv -O'
 alias work='ssh -Y zb900042@lvnvda8240.lvn.broadcom.net'
+alias redhawk_results='/project/priest/master_scripts/user_scripts/parse_redhawk_sc_block_rpts.ftc.py'
 
 # Safer fzf alias (use function)
 fzf() {

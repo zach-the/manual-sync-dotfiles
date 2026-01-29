@@ -69,3 +69,4 @@ export TZ='America/Denver'
 [ -f ~/.local_aliases ] && source ~/.local_aliases
 
 clear
+
