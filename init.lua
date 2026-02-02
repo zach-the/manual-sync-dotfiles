@@ -33,20 +33,6 @@ vim.opt.rtp:prepend(lazypath)
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
--- xsel for clipboard --------------------------------------------------------
--- vim.g.clipboard = {
-  -- name = 'xsel',
-  -- copy = {
-    -- ['+'] = 'xsel --clipboard --input',
-    -- ['*'] = 'xsel --primary --input',
-  -- },
-  -- paste = {
-    -- ['+'] = 'xsel --clipboard --output',
-    -- ['*'] = 'xsel --primary --output',
-  -- },
-  -- cache_enabled = 0,
--- }
-
 -- Statusline ----------------------------------------------------------------
 vim.o.statusline = table.concat({
   " %<%F",
@@ -68,7 +54,7 @@ vim.o.expandtab = true
 vim.o.shiftwidth = 4
 vim.o.tabstop = 4
 vim.o.softtabstop = 4
--- vim.o.clipboard = "unnamedplus"
+vim.o.clipboard = "unnamedplus"
 vim.o.termguicolors = true
 vim.o.cursorline = true
 vim.o.cursorcolumn = true
