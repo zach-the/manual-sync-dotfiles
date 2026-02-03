@@ -102,11 +102,9 @@ vim.api.nvim_create_autocmd("RecordingLeave", {
   end,
 })
 
--- Normal Mode: Move line up/down
+-- Normal/Visual Mode: Move line/block up/down ------------------------------
 vim.keymap.set('n', '<A-j>', ':m .+1<CR>==', { silent = true })
 vim.keymap.set('n', '<A-k>', ':m .-2<CR>==', { silent = true })
-
--- Visual Mode: Move selected block up/down
 vim.keymap.set('v', '<A-j>', ":m '>+1<CR>gv=gv", { silent = true })
 vim.keymap.set('v', '<A-k>', ":m '<-2<CR>gv=gv", { silent = true })
 
@@ -131,7 +129,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 
 require("lazy").setup({
   spec = {
-    -- "psliwka/vim-smoothie",
+    "psliwka/vim-smoothie",
     "tpope/vim-sleuth",
 
     {
