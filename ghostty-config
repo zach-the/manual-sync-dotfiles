@@ -58,3 +58,7 @@ keybind = alt+equal=equalize_splits
 keybind = alt+w=close_surface
 keybind = cmd+shift+r=prompt_surface_title
 confirm-close-surface = false
+
+# --- Manually send opt+j/k as alt+j/k (for nvim shortcut) ---
+keybind = alt+j=text:\x1bj
+keybind = alt+k=text:\x1bk
