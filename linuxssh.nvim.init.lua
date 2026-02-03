@@ -117,10 +117,10 @@ vim.api.nvim_create_autocmd("RecordingLeave", {
 })
 
 -- Normal/Visual Mode: Move line/block up/down ------------------------------
-vim.keymap.set('n', '<A-j>', ':m .+1<CR>==', { silent = true })
-vim.keymap.set('n', '<A-k>', ':m .-2<CR>==', { silent = true })
-vim.keymap.set('v', '<A-j>', ":m '>+1<CR>gv=gv", { silent = true })
-vim.keymap.set('v', '<A-k>', ":m '<-2<CR>gv=gv", { silent = true })
+vim.keymap.set('n', '<S-j>', ':m .+1<CR>==', { silent = true })
+vim.keymap.set('n', '<S-k>', ':m .-2<CR>==', { silent = true })
+vim.keymap.set('v', '<S-j>', ":m '>+1<CR>gv=gv", { silent = true })
+vim.keymap.set('v', '<S-k>', ":m '<-2<CR>gv=gv", { silent = true })
 
 -- Make matches blue --------------------------------------------------------
 vim.api.nvim_create_autocmd("ColorScheme", {
