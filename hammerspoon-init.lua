@@ -1,91 +1,95 @@
--- Define Hyper: Control + Alt + Command + Shift
+-- =====================================================================
+-- DEFINE HYPER : CTRL + OPT + CMD + SHIFT
+-- =====================================================================
 local hyper = {"ctrl", "alt", "cmd", "shift"}
 
--- Helper function to focus and move a specific window
-local function moveSpecificWindow(win)
-    if not win then
-        hs.alert.show("Error: New Kitty window not found.")
-        return
-    end
+-- =====================================================================
+-- DIRECTIONAL FOCUS FUNCTIONS
+-- =====================================================================
 
-    local mouseScreen = hs.mouse.getCurrentScreen()
-    if mouseScreen then
-        win:moveToScreen(mouseScreen)
-        win:focus() -- Force focus on the current window/Space
+-- Helper function to center mouse on a specific window
+local function moveMouseToWindow(win)
+    if win then
+        local frame = win:frame()
+        local centerPoint = {
+            x = frame.x + (frame.w / 2),
+            y = frame.y + (frame.h / 2)
+        }
+        hs.mouse.absolutePosition(centerPoint)
     end
 end
 
-
--- ===================================
--- Ghostty: Hyper + T (New Terminal Window)
--- ===================================
-
-hs.hotkey.bind(hyper, "T", function()
-    local app = hs.application.get("Ghostty")
+-- Smart Directional Focus Function (now with Mouse Movement)
+local function smartFocus(direction)
+    local win = hs.window.focusedWindow()
+    if not win then return end
     
-    if not app then
-        -- If Ghostty isn't running at all, just launch it
-        hs.application.launchOrFocus("Ghostty")
-    else
-        -- If it is running, focus it and trigger a new window keystroke
-        app:activate()
-        hs.eventtap.keyStroke({"cmd"}, "n")
+    local prevWin = win
+    local prevScreen = win:screen()
+    
+    -- 1. Try standard directional focus first
+    if direction == "West" then win:focusWindowWest()
+    elseif direction == "East" then win:focusWindowEast()
+    elseif direction == "North" then win:focusWindowNorth()
+    elseif direction == "South" then win:focusWindowSouth()
+    end
+    
+    local currWin = hs.window.focusedWindow()
+    local currScreen = currWin:screen()
+
+    -- 2. Detect Failure: Did we get stuck? OR Did we jump in the wrong direction?
+    local stuck = (currWin == prevWin)
+    local wrongDirection = false
+
+    -- Check for the "Wrap Around" bug
+    if direction == "West" and currScreen:frame().x > prevScreen:frame().x then
+        wrongDirection = true
+    elseif direction == "East" and currScreen:frame().x < prevScreen:frame().x then
+        wrongDirection = true
     end
 
-    -- Give the window a split second to exist, then move it to the mouse screen
-    hs.timer.doAfter(0.15, function()
-        local win = hs.window.focusedWindow()
-        if win and win:application():title() == "Ghostty" then
-            moveSpecificWindow(win)
-        end
-    end)
-end)
-
-
--- ===================================
--- Chrome: Hyper + N (New Browser Window)
--- ===================================
-
-hs.hotkey.bind(hyper, "N", function()
-    local app = hs.application.get("Google Chrome")
-    
-    if not app then
-        -- If Chrome isn't running, just launch it (it will open a window naturally)
-        hs.application.launchOrFocus("Google Chrome")
-    else
-        -- If it is already running, tell it to make a new window
-        local script = [[
-            tell application "Google Chrome"
-                make new window
-                activate
-            end tell
-        ]]
-        hs.osascript.applescript(script)
+    -- 3. If standard move worked correctly, move mouse and exit
+    if not stuck and not wrongDirection then
+        moveMouseToWindow(currWin)
+        return
     end
 
-    -- Use the timer to ensure the window is ready before moving it
-    hs.timer.doAfter(0.2, function()
-        local win = hs.window.focusedWindow()
-        -- Ensure we are actually moving a Chrome window
-        if win and win:application():title() == "Google Chrome" then
-            moveSpecificWindow(win)
+    -- 4. If failed, force a Screen Focus in that direction
+    local nextScreen = nil
+    if direction == "West" then nextScreen = prevScreen:toWest()
+    elseif direction == "East" then nextScreen = prevScreen:toEast()
+    elseif direction == "North" then nextScreen = prevScreen:toNorth()
+    elseif direction == "South" then nextScreen = prevScreen:toSouth()
+    end
+    
+    if nextScreen then
+        -- Find the last focused window on that screen and focus it
+        local windows = hs.window.filter.default:getWindows()
+        for _, w in ipairs(windows) do
+            if w:screen() == nextScreen then
+                w:focus()
+                moveMouseToWindow(w) -- Move mouse to the forced screen window
+                return
+            end
         end
-    end)
-end)
+    end
+end
 
--- ===================================
--- ADDING KEYBINDS FOR WINDOW THROWING
--- ===================================
+-- Bindings
+hs.hotkey.bind({"cmd"}, "H", function() smartFocus("West") end)
+hs.hotkey.bind({"cmd"}, "L", function() smartFocus("East") end)
+hs.hotkey.bind({"cmd"}, "K", function() smartFocus("North") end)
+hs.hotkey.bind({"cmd"}, "J", function() smartFocus("South") end)
+
 -- =====================================================================
--- CONFIGURATION
+-- WINDOW THROWING FUNCTION
 -- =====================================================================
 
+-- Configuration
 local gap = 8
 hs.window.animationDuration = 0.25
 
--- =====================================================================
--- HELPER FUNCTIONS
--- =====================================================================
+-- Helper Functions
 
 local windowHistory = {}
 
@@ -171,8 +175,84 @@ local function resize(action)
     end
 end
 
+
 -- =====================================================================
--- KEY BINDINGS
+-- HELPER FUNCTION FOR GHOSTTY/CHROME LAUNCH FUNCTIONS
+-- =====================================================================
+local function moveSpecificWindow(win)
+    if not win then
+        hs.alert.show("Error: New Kitty window not found.")
+        return
+    end
+
+    local mouseScreen = hs.mouse.getCurrentScreen()
+    if mouseScreen then
+        win:moveToScreen(mouseScreen)
+        win:focus() -- Force focus on the current window/Space
+    end
+end
+
+
+-- =====================================================================
+-- LAUNCH GHOSTTY
+-- =====================================================================
+
+hs.hotkey.bind(hyper, "T", function()
+    local app = hs.application.get("Ghostty")
+    
+    if not app then
+        -- If Ghostty isn't running at all, just launch it
+        hs.application.launchOrFocus("Ghostty")
+    else
+        -- If it is running, focus it and trigger a new window keystroke
+        app:activate()
+        hs.eventtap.keyStroke({"cmd"}, "n")
+    end
+
+    -- Give the window a split second to exist, then move it to the mouse screen
+    hs.timer.doAfter(0.15, function()
+        local win = hs.window.focusedWindow()
+        if win and win:application():title() == "Ghostty" then
+            moveSpecificWindow(win)
+        end
+    end)
+end)
+
+
+-- =====================================================================
+-- LAUNCH CHROME
+-- =====================================================================
+
+hs.hotkey.bind(hyper, "N", function()
+    local app = hs.application.get("Google Chrome")
+    
+    if not app then
+        -- If Chrome isn't running, just launch it (it will open a window naturally)
+        hs.application.launchOrFocus("Google Chrome")
+    else
+        -- If it is already running, tell it to make a new window
+        local script = [[
+            tell application "Google Chrome"
+                make new window
+                activate
+            end tell
+        ]]
+        hs.osascript.applescript(script)
+    end
+
+    -- Use the timer to ensure the window is ready before moving it
+    hs.timer.doAfter(0.2, function()
+        local win = hs.window.focusedWindow()
+        -- Ensure we are actually moving a Chrome window
+        if win and win:application():title() == "Google Chrome" then
+            moveSpecificWindow(win)
+        end
+    end)
+end)
+
+
+-- =====================================================================
+-- KEY BINDINGS FOR WINDOW THROWING / DIRECTIONAL FOCUS
 -- =====================================================================
 
 -- Halves
@@ -230,11 +310,17 @@ hs.hotkey.bind(hyper, "o", moveDisplay("next")) -- Next Display
 hs.hotkey.bind(hyper, "y", moveDisplay("prev"))  -- Previous Display
 
 
--- =====================================================================
--- SYSTEM
--- =====================================================================
-
 hs.hotkey.bind(hyper, "Z", function()
   hs.reload()
 end)
+
+-- Keybinds for Focus Shifting
+hs.hotkey.bind({"cmd"}, "H", function() smartFocus("West") end)
+hs.hotkey.bind({"cmd"}, "L", function() smartFocus("East") end)
+hs.hotkey.bind({"cmd"}, "K", function() smartFocus("North") end)
+hs.hotkey.bind({"cmd"}, "J", function() smartFocus("South") end)
+
+-- =====================================================================
+-- CONFIG LOADED MESSAGE
+-- =====================================================================
 hs.alert.show("Hammerspoon Config Loaded")
