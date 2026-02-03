@@ -80,14 +80,7 @@ end)
 -- CONFIGURATION
 -- =====================================================================
 
--- 1. Define Hyper: Control + Alt + Command + Shift
-local hyper = {"ctrl", "alt", "cmd", "shift"}
-
--- 2. Define Gap (in pixels)
-local gap = 10 
-
--- 3. Animation Duration (in seconds)
--- Set to 0 for instant snapping, or 0.3 for smooth animation
+local gap = 8
 hs.window.animationDuration = 0.25
 
 -- =====================================================================
@@ -123,18 +116,13 @@ local function move(x, y, w, h)
         f.w = max.w * w
         f.h = max.h * h
 
-        -- APPLY GAPS
-        
-        -- 1. Horizontal Gaps (Left/Right) - Always apply standard gap
-        f.x = f.x + gap
-        f.w = f.w - (gap * 2)
-
-        -- 2. Vertical Gaps (Top/Bottom) - Smart Top Gap Check
-        if y == 0 then
-            -- If touching top: No top gap, only subtract bottom gap
+        -- Horizontal Gaps (Left/Right) - Always apply standard gap
+        f.x = f.x + gap -- horizontal gaps (left/right) always apply standard gap
+        f.w = f.w - (gap * 2) 
+        -- Vertical Gaps (Top/Bottom) - Smart Top Gap Check
+        if y == 0 then -- if touching top: no top gap
             f.h = f.h - gap 
-        else
-            -- If not touching top: Add top gap, subtract top & bottom gaps
+        else -- if not touching top: add top gap
             f.y = f.y + gap
             f.h = f.h - (gap * 2)
         end
@@ -238,8 +226,8 @@ hs.hotkey.bind(hyper, "-", resize("smaller"))       -- Make Smaller
 hs.hotkey.bind(hyper, "=", resize("larger"))        -- Make Larger
 
 -- Displays
-hs.hotkey.bind(hyper, "right", moveDisplay("next")) -- Next Display
-hs.hotkey.bind(hyper, "left", moveDisplay("prev"))  -- Previous Display
+hs.hotkey.bind(hyper, "o", moveDisplay("next")) -- Next Display
+hs.hotkey.bind(hyper, "y", moveDisplay("prev"))  -- Previous Display
 
 
 -- =====================================================================
@@ -250,6 +238,3 @@ hs.hotkey.bind(hyper, "Z", function()
   hs.reload()
 end)
 hs.alert.show("Hammerspoon Config Loaded")
-
-
-
