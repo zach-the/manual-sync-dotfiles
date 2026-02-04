@@ -155,10 +155,15 @@ require("lazy").setup({
       end,
     },
 
+
     {
       'tribela/transparent.nvim',
       event = 'VimEnter',
-      config = true,
+      config = function()
+        require('transparent').setup({
+          exclude_groups = { "CursorLine" },
+        })
+      end,
     },
 
     {
