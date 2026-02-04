@@ -222,6 +222,25 @@ local function resize(action)
     end
 end
 
+-- =====================================================================
+-- UNMINIMIZE ALL WINDOWS
+-- =====================================================================
+local function unMinimizeAll()
+    local windows = hs.window.allWindows()
+    local count = 0
+    
+    for _, win in ipairs(windows) do
+        if win:isMinimized() then
+            win:unminimize()
+            count = count + 1
+        end
+    end
+    
+    if count > 0 then
+    else
+        hs.alert.show("No minimized windows found")
+    end
+end
 
 -- =====================================================================
 -- HELPER FUNCTION FOR GHOSTTY/CHROME LAUNCH FUNCTIONS
@@ -244,7 +263,7 @@ end
 -- LAUNCH GHOSTTY
 -- =====================================================================
 
-hs.hotkey.bind(hyper, "T", function()
+local function launchGhostty()
     local app = hs.application.get("Ghostty")
     
     if not app then
@@ -263,14 +282,14 @@ hs.hotkey.bind(hyper, "T", function()
             moveSpecificWindow(win)
         end
     end)
-end)
+end
 
 
 -- =====================================================================
 -- LAUNCH CHROME
 -- =====================================================================
 
-hs.hotkey.bind(hyper, "N", function()
+local function launchChrome()
     local app = hs.application.get("Google Chrome")
     
     if not app then
@@ -295,7 +314,7 @@ hs.hotkey.bind(hyper, "N", function()
             moveSpecificWindow(win)
         end
     end)
-end)
+end
 
 
 -- =====================================================================
@@ -370,26 +389,12 @@ hs.hotkey.bind({"cmd", "alt"}, "H", function() smartFocus("West") end)
 hs.hotkey.bind({"cmd", "alt"}, "L", function() smartFocus("East") end)
 hs.hotkey.bind({"cmd", "alt"}, "K", function() smartFocus("North") end)
 hs.hotkey.bind({"cmd", "alt"}, "J", function() smartFocus("South") end)
+hs.hotkey.bind(hyper, "P", unMinimizeAll)
 
--- =====================================================================
--- UNMINIMIZE ALL WINDOWS
--- =====================================================================
-hs.hotkey.bind(hyper, "P", function()
-    local windows = hs.window.allWindows()
-    local count = 0
-    
-    for _, win in ipairs(windows) do
-        if win:isMinimized() then
-            win:unminimize()
-            count = count + 1
-        end
-    end
-    
-    if count > 0 then
-    else
-        hs.alert.show("No minimized windows found")
-    end
-end)
+-- Ghostty and Chrome
+hs.hotkey.bind(hyper, "T", launchGhostty)
+hs.hotkey.bind(hyper, "N", launchChrome)
+
 
 -- =====================================================================
 -- CONFIG LOADED MESSAGE
