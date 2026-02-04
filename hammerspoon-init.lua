@@ -168,7 +168,7 @@ local function move(x, y, w, h)
         -- Top Edge (Preserving your "Flush Top" preference)
         if y == 0 then
             f.y = f.y + 2
-            y = y + 2
+            f.h = f.h - 2
             -- If touching top, no top gap (f.y unchanged)
             -- Only adjust height based on bottom condition
             if (y + h) >= 0.99 then
