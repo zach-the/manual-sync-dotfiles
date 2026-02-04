@@ -32,8 +32,6 @@ local hyper = {"ctrl", "alt", "cmd", "shift"}
 -- =====================================================================
 -- DIRECTIONAL FOCUS
 -- =====================================================================
-
--- Helper function to center mouse on a specific window
 local function moveMouseToWindow(win)
     if win then
         local frame = win:frame()
@@ -45,103 +43,62 @@ local function moveMouseToWindow(win)
     end
 end
 
--- Revised Smart Focus Function
 local function smartFocus(direction)
     local win = hs.window.focusedWindow()
+    -- Safety check: If a tab closed and focus is "lost" to the OS, try to grab the frontmost app's window
+    if not win then win = hs.window.frontmostWindow() end
     if not win then return end
 
-    local currentScreen = win:screen()
     local winFrame = win:frame()
     local winCenter = {x = winFrame.x + winFrame.w/2, y = winFrame.y + winFrame.h/2}
 
-    -- 1. SEARCH LOCAL: Look for windows on the SAME screen first
+    -- FIX: Use visibleWindows() instead of filters. 
+    -- Filters cache state and can "lose" Ghostty after a tab close.
+    -- This queries the OS directly for the current truth.
+    local allWindows = hs.window.visibleWindows()
     local candidates = {}
-    
-    -- Get standard, visible windows on the current space
-    local windows = hs.window.filter.defaultCurrentSpace:getWindows()
-    
-    for _, w in ipairs(windows) do
-        -- Check: Same screen, standard window, visible, not current
-        if w:screen() == currentScreen and w:id() ~= win:id() and w:isStandard() and w:isVisible() then
+
+    for _, w in ipairs(allWindows) do
+        -- Check: Not current window + Visible + Standard (avoids tooltips/popups)
+        if w:id() ~= win:id() and w:isVisible() and w:isStandard() then
             local f = w:frame()
             local c = {x = f.x + f.w/2, y = f.y + f.h/2}
+            
+            -- Calculate deltas
+            local deltaX = c.x - winCenter.x
+            local deltaY = c.y - winCenter.y
+            
             local isCandidate = false
             
-            if direction == "West" and c.x < winCenter.x then isCandidate = true
-            elseif direction == "East" and c.x > winCenter.x then isCandidate = true
-            elseif direction == "North" and c.y < winCenter.y then isCandidate = true
-            elseif direction == "South" and c.y > winCenter.y then isCandidate = true
+            -- Geometric "Cone" Check
+            -- We ensure the window is mostly in the target direction (avoids diagonals)
+            if direction == "West" then
+                if deltaX < 0 and math.abs(deltaX) > math.abs(deltaY) then isCandidate = true end
+            elseif direction == "East" then
+                if deltaX > 0 and math.abs(deltaX) > math.abs(deltaY) then isCandidate = true end
+            elseif direction == "North" then
+                if deltaY < 0 and math.abs(deltaY) > math.abs(deltaX) then isCandidate = true end
+            elseif direction == "South" then
+                if deltaY > 0 and math.abs(deltaY) > math.abs(deltaX) then isCandidate = true end
             end
-            
+
             if isCandidate then
-                table.insert(candidates, {window = w, center = c})
+                local distance = deltaX^2 + deltaY^2
+                table.insert(candidates, {window = w, dist = distance})
             end
         end
     end
 
-    -- If local candidates found, pick the closest one
+    -- Sort by distance (closest first)
     if #candidates > 0 then
         table.sort(candidates, function(a, b)
-            local distA = (a.center.x - winCenter.x)^2 + (a.center.y - winCenter.y)^2
-            local distB = (b.center.x - winCenter.x)^2 + (b.center.y - winCenter.y)^2
-            return distA < distB
+            return a.dist < b.dist
         end)
         
         candidates[1].window:focus()
         moveMouseToWindow(candidates[1].window)
-        return
     end
-
-    -- 2. SEARCH SCREEN: If no local window, move to the next SCREEN
-    local nextScreen = nil
-    if direction == "West" then nextScreen = currentScreen:toWest()
-    elseif direction == "East" then nextScreen = currentScreen:toEast()
-    elseif direction == "North" then nextScreen = currentScreen:toNorth()
-    elseif direction == "South" then nextScreen = currentScreen:toSouth()
-    end
-
-    if nextScreen then
-        -- Find all visible, standard windows on the next screen
-        local allWindows = hs.window.filter.defaultCurrentSpace:getWindows()
-        local nextScreenCandidates = {}
-
-        for _, w in ipairs(allWindows) do
-             if w:screen() == nextScreen and w:isStandard() and w:isVisible() then
-                 table.insert(nextScreenCandidates, w)
-             end
-        end
-
-        -- FIX: Sort the windows on the new screen based on entry direction
-        if #nextScreenCandidates > 0 then
-            table.sort(nextScreenCandidates, function(a, b)
-                local fA = a:frame()
-                local fB = b:frame()
-                
-                if direction == "West" then
-                    -- Moving West (from Center to Left): We want the RIGHT-most window (highest X)
-                    return fA.x > fB.x
-                elseif direction == "East" then
-                    -- Moving East (from Left to Center): We want the LEFT-most window (lowest X)
-                    return fA.x < fB.x
-                elseif direction == "North" then
-                    -- Moving North (Up): We want the BOTTOM-most window (highest Y)
-                    return fA.y > fB.y
-                elseif direction == "South" then
-                    -- Moving South (Down): We want the TOP-most window (lowest Y)
-                    return fA.y < fB.y
-                end
-                return false
-            end)
-
-            -- Focus the best candidate on the new screen
-            nextScreenCandidates[1]:focus()
-            moveMouseToWindow(nextScreenCandidates[1])
-            return
-        end
-    end
-    
 end
-
 
 -- =====================================================================
 -- WINDOW THROWING FUNCTIONS
