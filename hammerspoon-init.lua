@@ -30,10 +30,10 @@ local hyper = {"ctrl", "alt", "cmd", "shift"}
 --==============================================================================--
 
 -- =====================================================================
--- DIRECTIONAL FOCUS FUNCTIONS
+-- IMPROVED DIRECTIONAL FOCUS
 -- =====================================================================
 
--- Helper function to center mouse on a specific window
+-- Helper function to center mouse on a specific window (Keep this as is)
 local function moveMouseToWindow(win)
     if win then
         local frame = win:frame()
@@ -45,60 +45,82 @@ local function moveMouseToWindow(win)
     end
 end
 
--- Smart Directional Focus Function (now with Mouse Movement)
+-- Revised Smart Focus Function (Local-First Logic)
 local function smartFocus(direction)
     local win = hs.window.focusedWindow()
     if not win then return end
-    
-    local prevWin = win
-    local prevScreen = win:screen()
-    
-    -- 1. Try standard directional focus first
-    if direction == "West" then win:focusWindowWest()
-    elseif direction == "East" then win:focusWindowEast()
-    elseif direction == "North" then win:focusWindowNorth()
-    elseif direction == "South" then win:focusWindowSouth()
-    end
-    
-    local currWin = hs.window.focusedWindow()
-    local currScreen = currWin:screen()
 
-    -- 2. Detect Failure: Did we get stuck? OR Did we jump in the wrong direction?
-    local stuck = (currWin == prevWin)
-    local wrongDirection = false
+    local currentScreen = win:screen()
+    local winFrame = win:frame()
+    -- Calculate center of current window
+    local winCenter = {x = winFrame.x + winFrame.w/2, y = winFrame.y + winFrame.h/2}
 
-    -- Check for the "Wrap Around" bug
-    if direction == "West" and currScreen:frame().x > prevScreen:frame().x then
-        wrongDirection = true
-    elseif direction == "East" and currScreen:frame().x < prevScreen:frame().x then
-        wrongDirection = true
-    end
-
-    -- 3. If standard move worked correctly, move mouse and exit
-    if not stuck and not wrongDirection then
-        moveMouseToWindow(currWin)
-        return
-    end
-
-    -- 4. If failed, force a Screen Focus in that direction
-    local nextScreen = nil
-    if direction == "West" then nextScreen = prevScreen:toWest()
-    elseif direction == "East" then nextScreen = prevScreen:toEast()
-    elseif direction == "North" then nextScreen = prevScreen:toNorth()
-    elseif direction == "South" then nextScreen = prevScreen:toSouth()
-    end
+    -- 1. SEARCH LOCAL: Look for windows on the SAME screen first
+    local candidates = {}
     
-    if nextScreen then
-        -- Find the last focused window on that screen and focus it
-        local windows = hs.window.filter.default:getWindows()
-        for _, w in ipairs(windows) do
-            if w:screen() == nextScreen then
-                w:focus()
-                moveMouseToWindow(w) -- Move mouse to the forced screen window
-                return
+    -- Get all visible windows on the current space
+    local windows = hs.window.filter.defaultCurrentSpace:getWindows()
+    
+    for _, w in ipairs(windows) do
+        -- Only check windows on the same screen, visible, and not the current one
+        if w:screen() == currentScreen and w:id() ~= win:id() and w:isVisible() then
+            local f = w:frame()
+            local c = {x = f.x + f.w/2, y = f.y + f.h/2}
+            local isCandidate = false
+            
+            -- Geometric check for direction
+            if direction == "West" and c.x < winCenter.x then isCandidate = true
+            elseif direction == "East" and c.x > winCenter.x then isCandidate = true
+            elseif direction == "North" and c.y < winCenter.y then isCandidate = true
+            elseif direction == "South" and c.y > winCenter.y then isCandidate = true
+            end
+            
+            if isCandidate then
+                table.insert(candidates, {window = w, center = c})
             end
         end
     end
+
+    -- If we found candidates on the same screen, pick the closest one
+    if #candidates > 0 then
+        table.sort(candidates, function(a, b)
+            -- Sort by simple euclidean distance to the current window center
+            local distA = (a.center.x - winCenter.x)^2 + (a.center.y - winCenter.y)^2
+            local distB = (b.center.x - winCenter.x)^2 + (b.center.y - winCenter.y)^2
+            return distA < distB
+        end)
+        
+        -- Focus the best local candidate
+        candidates[1].window:focus()
+        moveMouseToWindow(candidates[1].window)
+        return
+    end
+
+    -- 2. SEARCH SCREEN: If no local window, move to the next SCREEN
+    local nextScreen = nil
+    if direction == "West" then nextScreen = currentScreen:toWest()
+    elseif direction == "East" then nextScreen = currentScreen:toEast()
+    elseif direction == "North" then nextScreen = currentScreen:toNorth()
+    elseif direction == "South" then nextScreen = currentScreen:toSouth()
+    end
+
+    if nextScreen then
+        -- Find a window on the next screen to focus
+        local nextWindows = hs.window.filter.defaultCurrentSpace:getWindows()
+        
+        -- Optional: Try to find the last focused window on that screen, 
+        -- or just pick the first visible one.
+        for _, w in ipairs(nextWindows) do
+             if w:screen() == nextScreen and w:isVisible() then
+                 w:focus()
+                 moveMouseToWindow(w)
+                 return
+             end
+        end
+    end
+    
+    -- Optional: Play a sound if no movement is possible
+    -- hs.alert.show("Edge reached") 
 end
 
 -- =====================================================================
