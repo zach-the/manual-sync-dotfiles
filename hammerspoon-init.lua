@@ -30,10 +30,10 @@ local hyper = {"ctrl", "alt", "cmd", "shift"}
 --==============================================================================--
 
 -- =====================================================================
--- IMPROVED DIRECTIONAL FOCUS
+-- DIRECTIONAL FOCUS
 -- =====================================================================
 
--- Helper function to center mouse on a specific window (Keep this as is)
+-- Helper function to center mouse on a specific window
 local function moveMouseToWindow(win)
     if win then
         local frame = win:frame()
@@ -45,30 +45,28 @@ local function moveMouseToWindow(win)
     end
 end
 
--- Revised Smart Focus Function (Local-First Logic)
+-- Revised Smart Focus Function
 local function smartFocus(direction)
     local win = hs.window.focusedWindow()
     if not win then return end
 
     local currentScreen = win:screen()
     local winFrame = win:frame()
-    -- Calculate center of current window
     local winCenter = {x = winFrame.x + winFrame.w/2, y = winFrame.y + winFrame.h/2}
 
     -- 1. SEARCH LOCAL: Look for windows on the SAME screen first
     local candidates = {}
     
-    -- Get all visible windows on the current space
+    -- Get standard, visible windows on the current space
     local windows = hs.window.filter.defaultCurrentSpace:getWindows()
     
     for _, w in ipairs(windows) do
-        -- Only check windows on the same screen, visible, and not the current one
-        if w:screen() == currentScreen and w:id() ~= win:id() and w:isVisible() then
+        -- Check: Same screen, standard window, visible, not current
+        if w:screen() == currentScreen and w:id() ~= win:id() and w:isStandard() and w:isVisible() then
             local f = w:frame()
             local c = {x = f.x + f.w/2, y = f.y + f.h/2}
             local isCandidate = false
             
-            -- Geometric check for direction
             if direction == "West" and c.x < winCenter.x then isCandidate = true
             elseif direction == "East" and c.x > winCenter.x then isCandidate = true
             elseif direction == "North" and c.y < winCenter.y then isCandidate = true
@@ -81,16 +79,14 @@ local function smartFocus(direction)
         end
     end
 
-    -- If we found candidates on the same screen, pick the closest one
+    -- If local candidates found, pick the closest one
     if #candidates > 0 then
         table.sort(candidates, function(a, b)
-            -- Sort by simple euclidean distance to the current window center
             local distA = (a.center.x - winCenter.x)^2 + (a.center.y - winCenter.y)^2
             local distB = (b.center.x - winCenter.x)^2 + (b.center.y - winCenter.y)^2
             return distA < distB
         end)
         
-        -- Focus the best local candidate
         candidates[1].window:focus()
         moveMouseToWindow(candidates[1].window)
         return
@@ -105,23 +101,47 @@ local function smartFocus(direction)
     end
 
     if nextScreen then
-        -- Find a window on the next screen to focus
-        local nextWindows = hs.window.filter.defaultCurrentSpace:getWindows()
-        
-        -- Optional: Try to find the last focused window on that screen, 
-        -- or just pick the first visible one.
-        for _, w in ipairs(nextWindows) do
-             if w:screen() == nextScreen and w:isVisible() then
-                 w:focus()
-                 moveMouseToWindow(w)
-                 return
+        -- Find all visible, standard windows on the next screen
+        local allWindows = hs.window.filter.defaultCurrentSpace:getWindows()
+        local nextScreenCandidates = {}
+
+        for _, w in ipairs(allWindows) do
+             if w:screen() == nextScreen and w:isStandard() and w:isVisible() then
+                 table.insert(nextScreenCandidates, w)
              end
+        end
+
+        -- FIX: Sort the windows on the new screen based on entry direction
+        if #nextScreenCandidates > 0 then
+            table.sort(nextScreenCandidates, function(a, b)
+                local fA = a:frame()
+                local fB = b:frame()
+                
+                if direction == "West" then
+                    -- Moving West (from Center to Left): We want the RIGHT-most window (highest X)
+                    return fA.x > fB.x
+                elseif direction == "East" then
+                    -- Moving East (from Left to Center): We want the LEFT-most window (lowest X)
+                    return fA.x < fB.x
+                elseif direction == "North" then
+                    -- Moving North (Up): We want the BOTTOM-most window (highest Y)
+                    return fA.y > fB.y
+                elseif direction == "South" then
+                    -- Moving South (Down): We want the TOP-most window (lowest Y)
+                    return fA.y < fB.y
+                end
+                return false
+            end)
+
+            -- Focus the best candidate on the new screen
+            nextScreenCandidates[1]:focus()
+            moveMouseToWindow(nextScreenCandidates[1])
+            return
         end
     end
     
-    -- Optional: Play a sound if no movement is possible
-    -- hs.alert.show("Edge reached") 
 end
+
 
 -- =====================================================================
 -- WINDOW THROWING FUNCTIONS
