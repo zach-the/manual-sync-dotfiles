@@ -102,7 +102,7 @@ local function snapshot(win)
     end
 end
 
--- Core function to move windows with SMART TOP GAPS
+-- Core function to move windows with SMART GAPS (Inner gap is 1/2 size)
 local function move(x, y, w, h)
     return function()
         local win = hs.window.focusedWindow()
@@ -120,16 +120,53 @@ local function move(x, y, w, h)
         f.w = max.w * w
         f.h = max.h * h
 
-        -- Horizontal Gaps (Left/Right) - Always apply standard gap
-        f.x = f.x + gap -- horizontal gaps (left/right) always apply standard gap
-        f.w = f.w - (gap * 2) 
-        -- Vertical Gaps (Top/Bottom) - Smart Top Gap Check
-        if y == 0 then -- if touching top: no top gap
-            f.h = f.h - gap 
-        else -- if not touching top: add top gap
-            f.y = f.y + gap
-            f.h = f.h - (gap * 2)
+        -- GAP LOGIC ---------------------------------------------------
+        -- Outer Gap = gap
+        -- Inner Gap = gap / 2 (We subtract gap/2 from each window to achieve this)
+        
+        local outerGap = gap
+        local innerWindowPadding = gap / 2 
+
+        -- 1. Horizontal Gaps
+        -- Left Edge
+        if x == 0 then 
+            f.x = f.x + outerGap
+            f.w = f.w - outerGap
+        else
+            f.x = f.x + innerWindowPadding
+            f.w = f.w - innerWindowPadding
         end
+
+        -- Right Edge (check if x + w is approximately 1)
+        if (x + w) >= 0.99 then 
+            f.w = f.w - outerGap
+        else 
+            f.w = f.w - innerWindowPadding
+        end
+
+        -- 2. Vertical Gaps
+        -- Top Edge (Preserving your "Flush Top" preference)
+        if y == 0 then
+            -- If touching top, no top gap (f.y unchanged)
+            -- Only adjust height based on bottom condition
+            if (y + h) >= 0.99 then
+                f.h = f.h - outerGap -- Touching bottom
+            else
+                f.h = f.h - innerWindowPadding -- Touching another window below
+            end
+        else
+            -- Not touching top (so it's below something)
+            f.y = f.y + innerWindowPadding
+            f.h = f.h - innerWindowPadding
+            
+            -- Bottom adjustment
+            if (y + h) >= 0.99 then
+                f.h = f.h - outerGap -- Touching bottom
+            else
+                f.h = f.h - innerWindowPadding -- Touching another window below
+            end
+        end
+        -- -------------------------------------------------------------
 
         win:setFrame(f)
     end
@@ -259,7 +296,11 @@ end)
 hs.hotkey.bind(hyper, "A", move(0, 0, 0.5, 1))      -- Left Half
 hs.hotkey.bind(hyper, "D", move(0.5, 0, 0.5, 1))    -- Right Half
 hs.hotkey.bind(hyper, "S", move(0.25, 0, 0.5, 1))   -- Center Half
-hs.hotkey.bind(hyper, "T", move(0, 0, 1, 0.5))      -- Top Half
+
+-- NOTE: Your 'T' binding for "Top Half" is currently overwritten by 
+-- the "Launch Ghostty" binding above. I have commented this out to avoid confusion.
+-- hs.hotkey.bind(hyper, "T", move(0, 0, 1, 0.5))      -- Top Half
+
 hs.hotkey.bind(hyper, "G", move(0, 0.5, 1, 0.5))    -- Bottom Half
 
 -- Corners (Quarters)
