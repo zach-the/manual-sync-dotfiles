@@ -19,6 +19,16 @@
 -- =====================================================================
 local hyper = {"ctrl", "alt", "cmd", "shift"}
 
+
+--==============================================================================--
+--  _   _      _                   _____                 _   _                  --
+-- | | | | ___| |_ __   ___ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___  --
+-- | |_| |/ _ \ | '_ \ / _ \ '__| | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __| --
+-- |  _  |  __/ | |_) |  __/ |    |  _|| |_| | | | | (__| |_| | (_) | | | \__ \ --
+-- |_| |_|\___|_| .__/ \___|_|    |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/ --
+--              |_|                                                             --
+--==============================================================================--
+
 -- =====================================================================
 -- DIRECTIONAL FOCUS FUNCTIONS
 -- =====================================================================
@@ -92,7 +102,7 @@ local function smartFocus(direction)
 end
 
 -- =====================================================================
--- WINDOW THROWING FUNCTION
+-- WINDOW THROWING FUNCTIONS
 -- =====================================================================
 
 -- Configuration
@@ -157,6 +167,8 @@ local function move(x, y, w, h)
         -- 2. Vertical Gaps
         -- Top Edge (Preserving your "Flush Top" preference)
         if y == 0 then
+            f.y = f.y + 2
+            y = y + 2
             -- If touching top, no top gap (f.y unchanged)
             -- Only adjust height based on bottom condition
             if (y + h) >= 0.99 then
@@ -197,7 +209,55 @@ local function moveDisplay(direction)
     end
 end
 
--- Function to resize (Make Larger/Smaller)
+-- =====================================================================
+-- WINDOW MOVEMENT
+-- =====================================================================
+
+-- Unminimize All Windows
+local function unMinimizeAll()
+    local windows = hs.window.allWindows()
+    local count = 0
+    
+    for _, win in ipairs(windows) do
+        if win:isMinimized() then
+            win:unminimize()
+            count = count + 1
+        end
+    end
+    
+    if count > 0 then
+    else
+        hs.alert.show("No minimized windows found")
+    end
+end
+
+-- Minimize Focused Window
+local function minimizeFocused()
+    local win = hs.window.focusedWindow()
+    if win then
+        win:minimize()
+    end
+end
+
+-- Maximize Focused Window
+local function maximize()
+    local win = hs.window.focusedWindow()
+    if win then
+        snapshot(win)
+        move(0,0,1,1)() 
+    end
+end
+
+-- Center Focused Window
+local function center()
+    local win = hs.window.focusedWindow()
+    if win then 
+        snapshot(win)
+        win:centerOnScreen() 
+    end
+end
+
+-- Resize Focused Window (smaller/larger)
 local function resize(action)
     return function()
         local win = hs.window.focusedWindow()
@@ -219,26 +279,6 @@ local function resize(action)
             f.h = f.h - step
         end
         win:setFrame(f)
-    end
-end
-
--- =====================================================================
--- UNMINIMIZE ALL WINDOWS
--- =====================================================================
-local function unMinimizeAll()
-    local windows = hs.window.allWindows()
-    local count = 0
-    
-    for _, win in ipairs(windows) do
-        if win:isMinimized() then
-            win:unminimize()
-            count = count + 1
-        end
-    end
-    
-    if count > 0 then
-    else
-        hs.alert.show("No minimized windows found")
     end
 end
 
@@ -316,21 +356,22 @@ local function launchChrome()
     end)
 end
 
-
--- =====================================================================
--- KEY BINDINGS FOR WINDOW THROWING / DIRECTIONAL FOCUS
--- =====================================================================
+--==========================================--
+--  _  __          _     _           _      --
+-- | |/ /___ _   _| |__ (_)_ __   __| |___  --
+-- | ' // _ \ | | | '_ \| | '_ \ / _` / __| --
+-- | . \  __/ |_| | |_) | | | | | (_| \__ \ --
+-- |_|\_\___|\__, |_.__/|_|_| |_|\__,_|___/ --
+--           |___/                          --
+--==========================================--
 
 -- Halves
 hs.hotkey.bind(hyper, "A", move(0, 0, 0.5, 1))      -- Left Half
 hs.hotkey.bind(hyper, "D", move(0.5, 0, 0.5, 1))    -- Right Half
 hs.hotkey.bind(hyper, "S", move(0.25, 0, 0.5, 1))   -- Center Half
 
--- NOTE: Your 'T' binding for "Top Half" is currently overwritten by 
--- the "Launch Ghostty" binding above. I have commented this out to avoid confusion.
--- hs.hotkey.bind(hyper, "T", move(0, 0, 1, 0.5))      -- Top Half
-
-hs.hotkey.bind(hyper, "G", move(0, 0.5, 1, 0.5))    -- Bottom Half
+hs.hotkey.bind(hyper, "G", move(0, 0, 1, 0.5))      -- Top Half
+hs.hotkey.bind(hyper, "B", move(0, 0.5, 1, 0.5))    -- Bottom Half
 
 -- Corners (Quarters)
 hs.hotkey.bind(hyper, "U", move(0, 0, 0.5, 0.5))    -- Top Left
@@ -348,48 +389,23 @@ hs.hotkey.bind(hyper, "W", move(0, 0, 2/3, 1))      -- First Two Thirds
 hs.hotkey.bind(hyper, "E", move(1/3, 0, 2/3, 1))    -- Last Two Thirds
 
 -- Sizing & Restoration
-hs.hotkey.bind(hyper, "F", function()               -- Maximize (respects gaps)
-    local win = hs.window.focusedWindow()
-    if win then
-        snapshot(win)
-        move(0,0,1,1)() 
-    end
-end)
-
-hs.hotkey.bind(hyper, "C", function()               -- Center
-    local win = hs.window.focusedWindow()
-    if win then 
-        snapshot(win)
-        win:centerOnScreen() 
-    end
-end)
-
-hs.hotkey.bind(hyper, "R", function()               -- Restore
-    local win = hs.window.focusedWindow()
-    if win and windowHistory[win:id()] then
-        win:setFrame(windowHistory[win:id()])
-        windowHistory[win:id()] = nil 
-    end
-end)
+hs.hotkey.bind(hyper, "F" maximize)                 -- Maximize
+hs.hotkey.bind(hyper, "C" center)                   -- Center
+hs.hotkey.bind(hyper, "R", unMinimizeAll)           -- Unminimize All
+hs.hotkey.bind(hyper, "Q", minimizeFocused)         -- Minimize
 
 hs.hotkey.bind(hyper, "-", resize("smaller"))       -- Make Smaller
 hs.hotkey.bind(hyper, "=", resize("larger"))        -- Make Larger
 
 -- Displays
-hs.hotkey.bind(hyper, "o", moveDisplay("next")) -- Next Display
-hs.hotkey.bind(hyper, "y", moveDisplay("prev"))  -- Previous Display
-
-
-hs.hotkey.bind(hyper, "Z", function()
-  hs.reload()
-end)
+hs.hotkey.bind(hyper, "O", moveDisplay("next")) -- Next Display
+hs.hotkey.bind(hyper, "Y", moveDisplay("prev"))  -- Previous Display
 
 -- Keybinds for Focus Shifting
 hs.hotkey.bind({"cmd", "alt"}, "H", function() smartFocus("West") end)
 hs.hotkey.bind({"cmd", "alt"}, "L", function() smartFocus("East") end)
 hs.hotkey.bind({"cmd", "alt"}, "K", function() smartFocus("North") end)
 hs.hotkey.bind({"cmd", "alt"}, "J", function() smartFocus("South") end)
-hs.hotkey.bind(hyper, "P", unMinimizeAll)
 
 -- Ghostty and Chrome
 hs.hotkey.bind(hyper, "T", launchGhostty)
@@ -399,4 +415,8 @@ hs.hotkey.bind(hyper, "N", launchChrome)
 -- =====================================================================
 -- CONFIG LOADED MESSAGE
 -- =====================================================================
+hs.hotkey.bind(hyper, "Z", function()               -- Reload Config
+  hs.reload()
+end)
+
 hs.alert.show("Hammerspoon Config Loaded")
