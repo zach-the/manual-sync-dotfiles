@@ -75,12 +75,6 @@ local function smartFocus(direction)
     end
 end
 
--- Bindings
-hs.hotkey.bind({"cmd"}, "H", function() smartFocus("West") end)
-hs.hotkey.bind({"cmd"}, "L", function() smartFocus("East") end)
-hs.hotkey.bind({"cmd"}, "K", function() smartFocus("North") end)
-hs.hotkey.bind({"cmd"}, "J", function() smartFocus("South") end)
-
 -- =====================================================================
 -- WINDOW THROWING FUNCTION
 -- =====================================================================
@@ -356,10 +350,30 @@ hs.hotkey.bind(hyper, "Z", function()
 end)
 
 -- Keybinds for Focus Shifting
-hs.hotkey.bind({"cmd"}, "H", function() smartFocus("West") end)
-hs.hotkey.bind({"cmd"}, "L", function() smartFocus("East") end)
-hs.hotkey.bind({"cmd"}, "K", function() smartFocus("North") end)
-hs.hotkey.bind({"cmd"}, "J", function() smartFocus("South") end)
+hs.hotkey.bind({"cmd", "alt"}, "H", function() smartFocus("West") end)
+hs.hotkey.bind({"cmd", "alt"}, "L", function() smartFocus("East") end)
+hs.hotkey.bind({"cmd", "alt"}, "K", function() smartFocus("North") end)
+hs.hotkey.bind({"cmd", "alt"}, "J", function() smartFocus("South") end)
+
+-- =====================================================================
+-- UNMINIMIZE ALL WINDOWS
+-- =====================================================================
+hs.hotkey.bind(hyper, "P", function()
+    local windows = hs.window.allWindows()
+    local count = 0
+    
+    for _, win in ipairs(windows) do
+        if win:isMinimized() then
+            win:unminimize()
+            count = count + 1
+        end
+    end
+    
+    if count > 0 then
+    else
+        hs.alert.show("No minimized windows found")
+    end
+end)
 
 -- =====================================================================
 -- CONFIG LOADED MESSAGE
