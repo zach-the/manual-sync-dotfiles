@@ -389,8 +389,8 @@ hs.hotkey.bind(hyper, "W", move(0, 0, 2/3, 1))      -- First Two Thirds
 hs.hotkey.bind(hyper, "E", move(1/3, 0, 2/3, 1))    -- Last Two Thirds
 
 -- Sizing & Restoration
-hs.hotkey.bind(hyper, "F" maximize)                 -- Maximize
-hs.hotkey.bind(hyper, "C" center)                   -- Center
+hs.hotkey.bind(hyper, "F", maximize)                 -- Maximize
+hs.hotkey.bind(hyper, "C", center)                   -- Center
 hs.hotkey.bind(hyper, "R", unMinimizeAll)           -- Unminimize All
 hs.hotkey.bind(hyper, "Q", minimizeFocused)         -- Minimize
 
