@@ -74,14 +74,14 @@ local macro_group = vim.api.nvim_create_augroup("macro", { clear = true })
 local function get_hl_color(name, key)
   local hl = vim.api.nvim_get_hl(0, { name = name })
   if not hl or vim.tbl_isempty(hl) then return nil end
-  
+
   local color = hl[key]
   if color then
     return string.format("#%06x", color)
   elseif hl.link then
     return get_hl_color(hl.link, key)
   end
-  return nil 
+  return nil
 end
 
 vim.api.nvim_create_autocmd("RecordingEnter", {
@@ -96,7 +96,7 @@ vim.api.nvim_create_autocmd("RecordingEnter", {
 vim.api.nvim_create_autocmd("RecordingLeave", {
   group = macro_group,
   callback = function()
-    -- Simply remove the window override. 
+    -- Simply remove the window override.
     -- Neovim falls back to the standard (transparent) CursorLine.
     vim.opt_local.winhighlight = ""
   end,
@@ -144,7 +144,11 @@ require("lazy").setup({
     {
       'tribela/transparent.nvim',
       event = 'VimEnter',
-      config = true,
+      config = function()
+        require('transparent').setup({
+          exclude_groups = { "CursorLine" },
+        })
+      end,
     },
 
     {
