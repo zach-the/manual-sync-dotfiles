@@ -139,8 +139,29 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 
 require("lazy").setup({
   spec = {
-    "psliwka/vim-smoothie",
     "tpope/vim-sleuth",
+
+    {
+      "karb94/neoscroll.nvim",
+      config = function()
+        local neoscroll = require("neoscroll")
+        neoscroll.setup({})
+
+        local get_step = function()
+          return math.floor(vim.api.nvim_win_get_height(0) / 3)
+        end
+
+        -- Scroll down 1/3 page
+        vim.keymap.set("n", "<C-d>", function()
+          neoscroll.scroll(get_step(), { move_cursor = true, duration = 250, easing = 'circular' })
+        end)
+
+        -- Scroll up 1/3 page
+        vim.keymap.set("n", "<C-u>", function()
+          neoscroll.scroll(-get_step(), { move_cursor = true, duration = 250, easing = 'circular' })
+        end)
+      end,
+    },
 
     {
       "sonph/onehalf",

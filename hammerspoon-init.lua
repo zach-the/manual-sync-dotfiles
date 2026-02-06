@@ -8,7 +8,6 @@
 --                                                                                     --
 --   ===============================================================================   --
 
-
 -- =====================================================================
 -- INSTRUCTIONS
 -- =====================================================================
@@ -190,6 +189,7 @@ local function move(x, y, w, h)
         -- -------------------------------------------------------------
 
         win:setFrame(f)
+        moveMouseToWindow(win) -- UPDATE: Move mouse to center
     end
 end
 
@@ -205,6 +205,9 @@ local function moveDisplay(direction)
         else
             win:moveOneScreenWest()
         end
+        
+        -- Optional: Center mouse after moving display as well
+        hs.timer.doAfter(0.1, function() moveMouseToWindow(win) end)
     end
 end
 
@@ -244,6 +247,7 @@ local function maximize()
     if win then
         snapshot(win)
         move(0,0,1,1)() 
+        -- Note: move() now handles the mouse centering
     end
 end
 
@@ -253,6 +257,7 @@ local function center()
     if win then 
         snapshot(win)
         win:centerOnScreen() 
+        moveMouseToWindow(win) -- UPDATE: Move mouse to center
     end
 end
 
@@ -278,6 +283,7 @@ local function resize(action)
             f.h = f.h - step
         end
         win:setFrame(f)
+        moveMouseToWindow(win) -- UPDATE: Move mouse to center
     end
 end
 
@@ -363,7 +369,6 @@ end
 -- |_|\_\___|\__, |_.__/|_|_| |_|\__,_|___/ --
 --           |___/                          --
 --==========================================--
-
 -- Halves
 hs.hotkey.bind(hyper, "A", move(0, 0, 0.5, 1))      -- Left Half
 hs.hotkey.bind(hyper, "D", move(0.5, 0, 0.5, 1))    -- Right Half
