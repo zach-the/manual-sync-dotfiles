@@ -80,6 +80,16 @@ vim.keymap.set({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { desc = "Do
 vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
 vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
 
+-- Scroll 1/3 of the page instead of 1/2 fo the page -------------------------
+vim.keymap.set('n', '<C-d>', function()
+  local step = math.floor(vim.api.nvim_win_get_height(0) / 3)
+  return step .. '<C-d>'
+end, { expr = true, replace_keycodes = true })
+vim.keymap.set('n', '<C-u>', function()
+  local step = math.floor(vim.api.nvim_win_get_height(0) / 3)
+  return step .. '<C-u>'
+end, { expr = true, replace_keycodes = true })
+
 -- Make macro recording purple -----------------------------------------------
 -- Create the group for our autocommands
 local macro_group = vim.api.nvim_create_augroup("macro", { clear = true })
