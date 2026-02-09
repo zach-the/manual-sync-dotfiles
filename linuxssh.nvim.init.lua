@@ -181,7 +181,7 @@ require("lazy").setup({
           neoscroll.scroll(get_small_step(), { move_cursor = true, duration = 250, easing = 'circular' })
         end)
 
-        -- bind ^d and ^u (1/3 page)
+        -- bind ^d and ^u (1/2 page)
         vim.keymap.set("n", "<C-d>", function()
           neoscroll.scroll(get_step(), { move_cursor = true, duration = 325, easing = 'circular' })
         end)
@@ -197,29 +197,83 @@ require("lazy").setup({
           neoscroll.scroll(-get_full_page(), { move_cursor = true, duration = 425, easing = 'circular' })
         end)
 
-        -- Helper for jumping Smart Jump (Teleport + Slide)
+        local get_dynamic_duration = function(abs_diff, screen_height)
+          local ratio = abs_diff / screen_height
+        
+          if ratio <= 0.125 then -- Less than 1/8 screen
+            return 250
+          elseif ratio <= 1.0 then -- Between 1/8 and 1 full screen
+            -- Scale 250ms (at 0.125) to 425ms (at 1.0)
+            -- Formula: min + (ratio - min_ratio) * (max - min) / (max_ratio - min_ratio)
+            return math.floor(250 + (ratio - 0.125) * (425 - 250) / (1.0 - 0.125))
+          else -- Greater than 1 full screen
+            -- Scale 425ms (at 1.0) to 600ms (at 3.0)
+            -- We'll let it keep scaling past 600ms if the jump is even larger
+            return math.floor(425 + (ratio - 1.0) * (600 - 425) / (3.0 - 1.0))
+          end
+        end
+        
         local smart_jump = function(target_line)
+          local total_lines = vim.fn.line('$')
+          target_line = math.max(1, math.min(target_line, total_lines))
+        
           local current_line = vim.fn.line('.')
           local diff = target_line - current_line
           local abs_diff = math.abs(diff)
           local screen_height = vim.api.nvim_win_get_height(0)
-          
-          -- If the jump is small (e.g. < 2 screens), just animate normally
+        
+          if abs_diff == 0 then return end
+        
+          -- Calculate dynamic duration based on distance
+          local duration = get_dynamic_duration(abs_diff, screen_height)
+        
           if abs_diff < screen_height * 2 then
-            neoscroll.scroll(diff, { move_cursor = true, duration = 450 })
+            neoscroll.scroll(diff, { move_cursor = true, duration = duration, easing = 'circular' })
           else
-            -- If the jump is huge:
-            -- A. Instantly teleport cursor to 1 screen away from target
+            -- For huge jumps, we use the "Teleport + Slide" logic
+            -- We'll use a fixed 600ms or higher for the slide portion
             local close_snap = screen_height * 4
+            local teleport_line
+            
             if diff > 0 then
-               vim.api.nvim_win_set_cursor(0, { target_line - close_snap, 0 })
-               neoscroll.scroll(close_snap, { move_cursor = true, duration = 600, easing = 'cubic' })
+              teleport_line = math.max(1, target_line - close_snap)
+              vim.api.nvim_win_set_cursor(0, { teleport_line, 0 })
+              neoscroll.scroll(target_line - teleport_line, { move_cursor = true, duration = math.max(600, duration), easing = 'circular' })
             else
-               vim.api.nvim_win_set_cursor(0, { target_line + close_snap, 0 })
-               neoscroll.scroll(-close_snap, { move_cursor = true, duration = 600, easing = 'cubic' })
+              teleport_line = math.min(total_lines, target_line + close_snap)
+              vim.api.nvim_win_set_cursor(0, { teleport_line, 0 })
+              neoscroll.scroll(target_line - teleport_line, { move_cursor = true, duration = math.max(600, duration), easing = 'circular' })
             end
           end
+        end       
+        -- Reusable helper to handle j/k logic
+        local move_with_scrolloff = function(direction)
+          local count = vim.v.count
+          if count > 0 then
+            local target_line = (direction == "j") and (vim.fn.line('.') + count) or (vim.fn.line('.') - count)
+            local scrolloff = vim.wo.scrolloff
+            
+            -- Check boundaries relative to viewport + scrolloff
+            local is_on_screen = false
+            if direction == "j" then
+              is_on_screen = target_line <= (vim.fn.line('w$') - scrolloff)
+            else
+              is_on_screen = target_line >= (vim.fn.line('w0') + scrolloff)
+            end
+        
+            if is_on_screen then
+              vim.cmd("normal! " .. count .. direction)
+            else
+              smart_jump(target_line)
+            end
+          else
+            vim.cmd("normal! " .. direction)
+          end
         end
+        
+        -- Clean Keybinds
+        vim.keymap.set("n", "j", function() move_with_scrolloff("j") end, { silent = true })
+        vim.keymap.set("n", "k", function() move_with_scrolloff("k") end, { silent = true })
 
         -- bind gg and G
         vim.keymap.set("n", "gg", function() smart_jump(1) end)
