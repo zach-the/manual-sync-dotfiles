@@ -162,18 +162,68 @@ require("lazy").setup({
         neoscroll.setup({})
 
         local get_step = function()
-          return math.floor(vim.api.nvim_win_get_height(0) / 3)
+          return math.floor(vim.api.nvim_win_get_height(0) * 4 / 9)
+        end
+        
+        local get_small_step = function()
+          return math.floor(vim.api.nvim_win_get_height(0) * 1 / 8)
         end
 
-        -- Scroll down 1/3 page
-        vim.keymap.set("n", "<C-d>", function()
-          neoscroll.scroll(get_step(), { move_cursor = true, duration = 250, easing = 'circular' })
+        local get_full_page = function()
+          return vim.api.nvim_win_get_height(0)
+        end
+
+        -- bind ^e and ^y (small step)
+        vim.keymap.set("n", "<C-y>", function()
+          neoscroll.scroll(-get_small_step(), { move_cursor = true, duration = 200, easing = 'circular' })
+        end)
+        vim.keymap.set("n", "<C-u>", function()
+          neoscroll.scroll(get_small_step(), { move_cursor = true, duration = 200, easing = 'circular' })
         end)
 
-        -- Scroll up 1/3 page
-        vim.keymap.set("n", "<C-u>", function()
-          neoscroll.scroll(-get_step(), { move_cursor = true, duration = 250, easing = 'circular' })
+        -- bind ^d and ^u (1/3 page)
+        vim.keymap.set("n", "<C-d>", function()
+          neoscroll.scroll(get_step(), { move_cursor = true, duration = 325, easing = 'circular' })
         end)
+        vim.keymap.set("n", "<C-u>", function()
+          neoscroll.scroll(-get_step(), { move_cursor = true, duration = 325, easing = 'circular' })
+        end)
+
+        -- bind ^b and ^f (full page)
+        vim.keymap.set("n", "<C-f>", function()
+          neoscroll.scroll(get_full_page(), { move_cursor = true, duration = 425, easing = 'circular' })
+        end)
+        vim.keymap.set("n", "<C-b>", function()
+          neoscroll.scroll(-get_full_page(), { move_cursor = true, duration = 425, easing = 'circular' })
+        end)
+
+        -- Helper for jumping Smart Jump (Teleport + Slide)
+        local smart_jump = function(target_line)
+          local current_line = vim.fn.line('.')
+          local diff = target_line - current_line
+          local abs_diff = math.abs(diff)
+          local screen_height = vim.api.nvim_win_get_height(0)
+          
+          -- If the jump is small (e.g. < 2 screens), just animate normally
+          if abs_diff < screen_height * 2 then
+            neoscroll.scroll(diff, { move_cursor = true, duration = 450 })
+          else
+            -- If the jump is huge:
+            -- A. Instantly teleport cursor to 1 screen away from target
+            local close_snap = screen_height * 4
+            if diff > 0 then
+               vim.api.nvim_win_set_cursor(0, { target_line - close_snap, 0 })
+               neoscroll.scroll(close_snap, { move_cursor = true, duration = 600, easing = 'cubic' })
+            else
+               vim.api.nvim_win_set_cursor(0, { target_line + close_snap, 0 })
+               neoscroll.scroll(-close_snap, { move_cursor = true, duration = 600, easing = 'cubic' })
+            end
+          end
+        end
+
+        -- bind gg and G
+        vim.keymap.set("n", "gg", function() smart_jump(1) end)
+        vim.keymap.set("n", "G", function() smart_jump(vim.fn.line('$')) end)
       end,
     },
 
