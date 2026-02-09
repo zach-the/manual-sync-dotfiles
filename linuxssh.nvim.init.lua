@@ -175,10 +175,10 @@ require("lazy").setup({
 
         -- bind ^e and ^y (small step)
         vim.keymap.set("n", "<C-y>", function()
-          neoscroll.scroll(-get_small_step(), { move_cursor = true, duration = 200, easing = 'circular' })
+          neoscroll.scroll(-get_small_step(), { move_cursor = true, duration = 250, easing = 'circular' })
         end)
-        vim.keymap.set("n", "<C-u>", function()
-          neoscroll.scroll(get_small_step(), { move_cursor = true, duration = 200, easing = 'circular' })
+        vim.keymap.set("n", "<C-e>", function()
+          neoscroll.scroll(get_small_step(), { move_cursor = true, duration = 250, easing = 'circular' })
         end)
 
         -- bind ^d and ^u (1/3 page)
