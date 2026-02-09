@@ -423,4 +423,5 @@ hs.hotkey.bind(hyper, "Z", function()               -- Reload Config
   hs.reload()
 end)
 
+
 hs.alert.show("Hammerspoon Config Loaded")
