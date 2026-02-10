@@ -188,7 +188,7 @@ require("lazy").setup({
                 
                 -- Toggle italic text for keywords, functions, etc.
                 code_style = {
-                    comments = 'italic',
+                    comments = 'none',
                     keywords = 'none',
                     functions = 'none',
                     strings = 'none',
