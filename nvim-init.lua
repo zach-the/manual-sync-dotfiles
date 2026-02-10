@@ -170,17 +170,28 @@ require("lazy").setup({
 -- -------------------------------------- --
 
     -- {
-      -- "folke/tokyonight.nvim",
-      -- lazy = false,
-      -- priority = 1000,
-      -- opts = {},
+    --   "folke/tokyonight.nvim",
+    --   lazy = false,
+    --   priority = 1000,
+    --   opts = {
+    --     style = "night", -- Valid: storm, night, moon, day
+    --     transparent = true, -- Enable transparent background
+    --     styles = {
+    --       sidebars = "transparent",
+    --       floats = "transparent",
+    --     },
+    --   },
+    --   config = function()
+    --     vim.cmd[[colorscheme tokyonight]]
+    --   end,
     -- },
+
     {
         'navarasu/onedark.nvim',
         priority = 1000, -- Load this before all other plugins
         config = function()
             require('onedark').setup({
-                style = 'dark', -- Options: dark, darker, cool, deep, warm, warmer, light
+                style = 'cool', -- Options: dark, darker, cool, deep, warm, warmer, light
                 transparent = false, -- Show/hide background
                 term_colors = true, -- Terminal colors
                 ending_tildes = false, -- Show ~ at the end of buffer
