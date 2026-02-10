@@ -160,147 +160,156 @@ require("lazy").setup({
       config = function()
         local neoscroll = require("neoscroll")
         neoscroll.setup({})
-
-        -- Configuration Variables
-        local small_step_duration = 250
-        local mid_step_duration = 325
-        local full_step_duration = 425
-        local max_step_duration = 600
+    
+        -- Helper to translate keycodes
+        local t = function(str)
+          return vim.api.nvim_replace_termcodes(str, true, true, true)
+        end
+    
+        -- Configuration
+        local small_step_duration = 175
+        local mid_step_duration = 275
+        local full_step_duration = 375
         local easing_profile = 'circular'
-
-        local get_step = function()
-          return math.floor(vim.api.nvim_win_get_height(0) * 4 / 9)
-        end
-
-        local get_small_step = function()
-          return math.floor(vim.api.nvim_win_get_height(0) * 1 / 8)
-        end
-
-        local get_full_page = function()
-          return vim.api.nvim_win_get_height(0)
-        end
-
-        -- bind ^e and ^y (small step)
-        vim.keymap.set("n", "<C-y>", function()
-          neoscroll.scroll(-get_small_step(), { move_cursor = true, duration = small_step_duration, easing = easing_profile })
-        end)
-        vim.keymap.set("n", "<C-e>", function()
-          neoscroll.scroll(get_small_step(), { move_cursor = true, duration = small_step_duration, easing = easing_profile })
-        end)
-
-        -- bind ^d and ^u (1/3 page)
-        vim.keymap.set("n", "<C-d>", function()
-          neoscroll.scroll(get_step(), { move_cursor = true, duration = mid_step_duration, easing = easing_profile })
-        end)
-        vim.keymap.set("n", "<C-u>", function()
-          neoscroll.scroll(-get_step(), { move_cursor = true, duration = mid_step_duration, easing = easing_profile })
-        end)
-
-        -- bind ^b and ^f (full page)
-        vim.keymap.set("n", "<C-f>", function()
-          neoscroll.scroll(get_full_page(), { move_cursor = true, duration = full_step_duration, easing = easing_profile })
-        end)
-        vim.keymap.set("n", "<C-b>", function()
-          neoscroll.scroll(-get_full_page(), { move_cursor = true, duration = full_step_duration, easing = easing_profile })
-        end)
-
-        -- ... (inside your config function) ...
-
-        -- Helper to calculate duration for "normal" scrolling behavior
+        local large_jump_duration = 500
+    
+        -- Standard Helpers
+        local get_step = function() return math.floor(vim.api.nvim_win_get_height(0) * 4 / 9) end
+        local get_small_step = function() return math.floor(vim.api.nvim_win_get_height(0) * 1 / 8) end
+        local get_full_page = function() return vim.api.nvim_win_get_height(0) end
+    
+        -- Standard Keybindings
+        vim.keymap.set("n", "<C-y>", function() neoscroll.scroll(-get_small_step(), { move_cursor = true, duration = small_step_duration, easing = easing_profile }) end)
+        vim.keymap.set("n", "<C-e>", function() neoscroll.scroll(get_small_step(), { move_cursor = true, duration = small_step_duration, easing = easing_profile }) end)
+        vim.keymap.set("n", "<C-d>", function() neoscroll.scroll(get_step(), { move_cursor = true, duration = mid_step_duration, easing = easing_profile }) end)
+        vim.keymap.set("n", "<C-u>", function() neoscroll.scroll(-get_step(), { move_cursor = true, duration = mid_step_duration, easing = easing_profile }) end)
+        vim.keymap.set("n", "<C-f>", function() neoscroll.scroll(get_full_page(), { move_cursor = true, duration = full_step_duration, easing = easing_profile }) end)
+        vim.keymap.set("n", "<C-b>", function() neoscroll.scroll(-get_full_page(), { move_cursor = true, duration = full_step_duration, easing = easing_profile }) end)
+    
+        -- =========================================================================
+        -- Custom Logic: Smart Jump & Animated Cursor
+        -- =========================================================================
+    
         local get_duration = function(distance, screen_height)
           local ratio = distance / screen_height
-          
-          -- 1. Small scrolls (< 1/8 screen): Fixed 250ms
-          if ratio <= 0.125 then
-            return 250
-          
-          -- 2. Medium scrolls (1/8 to 1 screen): Scale 250 -> 425ms
-          elseif ratio <= 1.0 then
-            return math.floor(250 + (ratio - 0.125) * (425 - 250) / (1.0 - 0.125))
-          
-          -- 3. Large scrolls (> 1 screen): Scale 425 -> 600ms (capped at 3 screens)
-          else
-            return math.floor(425 + math.min(1, (ratio - 1.0) / 2.0) * (600 - 425))
-          end
+          if ratio <= 0.125 then return 200
+          elseif ratio <= 1.0 then return math.floor(200 + (ratio - 0.125) * (400 - 200) / (1.0 - 0.125))
+          else return 450 end
         end
-
+    
+        -- [UPDATED] Cursor Animation with Quintic Ease-Out (Power of 5)
+        local animate_cursor = function(target_line)
+          local current_line = vim.fn.line('.')
+          local diff = target_line - current_line
+          if diff == 0 then return end
+    
+          local screen_height = vim.api.nvim_win_get_height(0)
+          local duration = get_duration(math.abs(diff), screen_height)
+    
+          local start_time = vim.uv.hrtime() / 1e6
+          local timer = vim.uv.new_timer()
+          
+          timer:start(0, 16, vim.schedule_wrap(function()
+            local now = vim.uv.hrtime() / 1e6
+            local elapsed = now - start_time
+            local t = math.min(elapsed / duration, 1)
+    
+            -- Quintic Ease-Out: 1 - (1 - t)^5
+            -- This is significantly steeper at the start than Cubic
+            local ease = 1 - math.pow(1 - t, 5)
+            
+            local next_line = math.floor(current_line + (diff * ease) + 0.5)
+            local max_lines = vim.fn.line('$')
+            next_line = math.max(1, math.min(next_line, max_lines))
+    
+            pcall(vim.api.nvim_win_set_cursor, 0, { next_line, 0 })
+    
+            if t >= 1 then
+              timer:stop(); timer:close()
+              pcall(vim.api.nvim_win_set_cursor, 0, { target_line, 0 })
+            end
+          end))
+        end
+    
         local smart_jump = function(target_line)
           local total_lines = vim.fn.line('$')
-          -- Clamp target to valid lines
           target_line = math.max(1, math.min(target_line, total_lines))
-
+          
           local current_line = vim.fn.line('.')
           local diff = target_line - current_line
           local abs_diff = math.abs(diff)
           local screen_height = vim.api.nvim_win_get_height(0)
-
+          local scrolloff = vim.wo.scrolloff
+    
           if abs_diff == 0 then return end
-
-          -- CASE A: Small jump (< 2 screens) -> Animate the whole way
-          if abs_diff < screen_height * 2 then
-             local duration = get_duration(abs_diff, screen_height)
-             neoscroll.scroll(diff, { move_cursor = true, duration = duration, easing = 'circular' })
-          
-          -- CASE B: Huge jump -> Teleport then slide
-          else
-             -- We "land" 1/2 screen away to give a nice settling effect
-             local land_distance = screen_height * 3
-             local duration = 600 -- Fixed short duration for the landing slide
-
-             if diff > 0 then
-                -- Jumping DOWN: Teleport slightly ABOVE target
-                local teleport_line = target_line - land_distance
-                vim.api.nvim_win_set_cursor(0, { teleport_line, 0 })
-                neoscroll.scroll(land_distance, { move_cursor = true, duration = duration, easing = 'circular' })
-             else
-                -- Jumping UP: Teleport slightly BELOW target
-                local teleport_line = target_line + land_distance
-                vim.api.nvim_win_set_cursor(0, { teleport_line, 0 })
-                neoscroll.scroll(-land_distance, { move_cursor = true, duration = duration, easing = 'circular' })
+    
+          if abs_diff > screen_height * 3 then
+             local scroll_dist = screen_height  * 3
+             local teleport_line
+    
+             if diff > 0 then -- DOWN
+                 teleport_line = target_line - scroll_dist
+                 teleport_line = math.max(1, math.min(teleport_line, total_lines))
+                 
+                 vim.api.nvim_win_set_cursor(0, { teleport_line, 0 })
+                 vim.cmd("norm! zb")
+                 if scrolloff > 0 then vim.cmd("norm! " .. scrolloff .. t("<C-e>")) end
+    
+                 neoscroll.scroll(scroll_dist, { move_cursor = false, duration = 500, easing = 'linear' })
+             else -- UP
+                 teleport_line = target_line + scroll_dist
+                 teleport_line = math.max(1, math.min(teleport_line, total_lines))
+    
+                 vim.api.nvim_win_set_cursor(0, { teleport_line, 0 })
+                 vim.cmd("norm! zt")
+                 if scrolloff > 0 then vim.cmd("norm! " .. scrolloff .. t("<C-y>")) end
+    
+                 neoscroll.scroll(-scroll_dist, { move_cursor = false, duration = 500, easing = 'linear' })
              end
+    
+             vim.defer_fn(function() animate_cursor(target_line) end, large_jump_duration)
+          else
+             neoscroll.scroll(diff, { move_cursor = true, duration = large_jump_duration, easing = easing_profile })
           end
         end
-
-        -- Helper for j/k scrolloff logic
-        local move_with_scrolloff = function(direction)
+    
+        local move_smart = function(direction)
           local count = vim.v.count
-          if count == 0 then
-            vim.cmd("normal! " .. direction)
+          if count == 0 then vim.cmd("normal! " .. direction); return end
+    
+          local current_line = vim.fn.line('.')
+          local target_line = (direction == "j") and (current_line + count) or (current_line - count)
+          local total_lines = vim.fn.line('$')
+          target_line = math.max(1, math.min(target_line, total_lines))
+          local screen_height = vim.api.nvim_win_get_height(0)
+    
+          if math.abs(target_line - current_line) > screen_height * 2 then
+            smart_jump(target_line)
             return
           end
-
-          local current_line = vim.fn.line('.')
-          local target_line
-          if direction == "j" then
-            target_line = current_line + count
-          else
-            target_line = current_line - count
-          end
-          
-          -- Clamp target so we don't error out
-          target_line = math.max(1, math.min(target_line, vim.fn.line('$')))
-
-          -- Check if target is visible within scrolloff limits
+    
           local scrolloff = vim.wo.scrolloff
-          local top_limit = vim.fn.line('w0') + scrolloff
-          local bottom_limit = vim.fn.line('w$') - scrolloff
-          
-          local is_visible = (target_line >= top_limit and target_line <= bottom_limit)
-
-          if is_visible then
-            vim.cmd("normal! " .. count .. direction)
+          local top_safe = vim.fn.line('w0') + scrolloff
+          local bot_safe = vim.fn.line('w$') - scrolloff
+          local scroll_needed = 0
+    
+          if target_line > bot_safe then scroll_needed = target_line - bot_safe
+          elseif target_line < top_safe then scroll_needed = target_line - top_safe end
+    
+          if scroll_needed ~= 0 then
+            local scroll_duration = get_duration(math.abs(scroll_needed), screen_height)
+            neoscroll.scroll(scroll_needed, { move_cursor = false, duration = scroll_duration, easing = easing_profile })
+            vim.defer_fn(function() animate_cursor(target_line) end, scroll_duration + 10)
           else
-            smart_jump(target_line)
+            animate_cursor(target_line)
           end
         end
-
-        -- Bindings
-        vim.keymap.set("n", "j", function() move_with_scrolloff("j") end, { silent = true })
-        vim.keymap.set("n", "k", function() move_with_scrolloff("k") end, { silent = true })
+    
+        vim.keymap.set("n", "j", function() move_smart("j") end, { silent = true })
+        vim.keymap.set("n", "k", function() move_smart("k") end, { silent = true })
         vim.keymap.set("n", "gg", function() smart_jump(1) end)
         vim.keymap.set("n", "G", function() smart_jump(vim.fn.line('$')) end)
       end,
-
     },
 
     {
