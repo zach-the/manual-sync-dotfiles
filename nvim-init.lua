@@ -388,7 +388,12 @@ require("lazy").setup({
 
         local move_smart = function(direction)
           local count = vim.v.count
-          if count == 0 then vim.cmd("normal! " .. direction); return end
+
+          if count == 0 then 
+            local wrap_dir = (direction == "j") and "gj" or "gk"
+            vim.cmd("normal! " .. wrap_dir)
+            return 
+          end
 
           local current_line = vim.fn.line('.')
           local target_line = (direction == "j") and (current_line + count) or (current_line - count)
