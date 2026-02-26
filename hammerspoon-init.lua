@@ -287,6 +287,13 @@ local function resize(action)
     end
 end
 
+local function fullscreen()
+    local win = hs.window.focusedWindow()
+    if win then
+        win:toggleFullScreen()
+    end
+end
+
 -- =====================================================================
 -- HELPER FUNCTION FOR GHOSTTY/CHROME LAUNCH FUNCTIONS
 -- =====================================================================
@@ -393,10 +400,11 @@ hs.hotkey.bind(hyper, "W", move(0, 0, 2/3, 1))      -- First Two Thirds
 hs.hotkey.bind(hyper, "E", move(1/3, 0, 2/3, 1))    -- Last Two Thirds
 
 -- Sizing & Restoration
-hs.hotkey.bind(hyper, "F", maximize)                 -- Maximize
-hs.hotkey.bind(hyper, "C", center)                   -- Center
+hs.hotkey.bind(hyper, "F", maximize)                -- Maximize
+hs.hotkey.bind(hyper, "C", center)                  -- Center
 hs.hotkey.bind(hyper, "R", unMinimizeAll)           -- Unminimize All
 hs.hotkey.bind(hyper, "Q", minimizeFocused)         -- Minimize
+hs.hotkey.bind(hyper, "return", fullscreen)         -- Fullscreen
 
 hs.hotkey.bind(hyper, "-", resize("smaller"))       -- Make Smaller
 hs.hotkey.bind(hyper, "=", resize("larger"))        -- Make Larger

@@ -49,6 +49,8 @@ keybind = ctrl+h=text:\x1b[D
 keybind = ctrl+l=text:\x1b[C
 keybind = ctrl+shift+k=scroll_page_fractional:-0.3
 keybind = ctrl+shift+j=scroll_page_fractional:0.3
+keybind = alt+shift+h=csi:H
+keybind = alt+shift+l=csi:F
 
 # --- Word Navigation using Native Actions ---
 keybind = ctrl+alt+h=esc:b
