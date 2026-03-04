@@ -294,6 +294,22 @@ local function fullscreen()
     end
 end
 
+-- Function to minimize all windows except the focused one
+local function isolateActiveWindow()
+    local activeWindow = hs.window.focusedWindow()
+    if not activeWindow then return end
+    
+    -- Get all visible windows across all screens
+    local allWindows = hs.window.visibleWindows()
+    
+    for _, win in ipairs(allWindows) do
+        -- Check if the window is NOT the active one and is NOT already minimized
+        if win:id() ~= activeWindow:id() then
+            win:minimize()
+        end
+    end
+end
+
 -- =====================================================================
 -- HELPER FUNCTION FOR GHOSTTY/CHROME LAUNCH FUNCTIONS
 -- =====================================================================
@@ -403,6 +419,7 @@ hs.hotkey.bind(hyper, "E", move(1/3, 0, 2/3, 1))    -- Last Two Thirds
 hs.hotkey.bind(hyper, "F", maximize)                -- Maximize
 hs.hotkey.bind(hyper, "C", center)                  -- Center
 hs.hotkey.bind(hyper, "R", unMinimizeAll)           -- Unminimize All
+hs.hotkey.bind(hyper, "M", isolateActiveWindow)     -- Minimize All Except Active
 hs.hotkey.bind(hyper, "Q", minimizeFocused)         -- Minimize
 hs.hotkey.bind(hyper, "return", fullscreen)         -- Fullscreen
 
