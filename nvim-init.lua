@@ -267,7 +267,7 @@ require("lazy").setup({
         end
 
         -- Configuration
-        local small_step_duration = 175
+        local small_step_duration = 225
         local mid_step_duration = 275
         local full_step_duration = 375
         local easing_profile = 'circular'

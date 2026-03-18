@@ -7,8 +7,7 @@ alias rgs='rg -S'
 alias zgs='rg -z -S'
 alias fzv='tmp=$(fzf) && echo $tmp && nvim $tmp'
 alias fzd='tmp=$(fd --type d -d 4 | fzf) && echo $tmp && d $tmp'
-alias nv='nvim'
-alias e='exit'
+alias e='clear && exit'
 alias ll='ls -lrt'
 alias la='ls -A'
 alias l='ls -CF'
@@ -25,6 +24,58 @@ alias lg='ls -lrga | rg'
 alias nvs='nv -O'
 alias work='ssh -Y zb900042@lvnvda8240.lvn.broadcom.net'
 alias redhawk_results='/project/priest/master_scripts/user_scripts/parse_redhawk_sc_block_rpts.ftc.py'
+
+# safe nvim (any file over 50mb will automatically use less)
+nv() {
+    # 1. No arguments? Just open nvim.
+    if [ "$#" -eq 0 ]; then
+        command nvim
+        return
+    fi
+
+    local limit_mb=50
+    local limit_bytes=$((limit_mb * 1024 * 1024))
+    local too_large=false
+    local file_report=""
+
+    # 2. Check all provided files first
+    for file in "$@"; do
+        if [ -f "$file" ]; then
+            local size_bytes=$(stat -c%s "$file")
+            local size_human=$(numfmt --to=iec-i --suffix=B "$size_bytes")
+            
+            if [ "$size_bytes" -gt "$limit_bytes" ]; then
+                too_large=true
+                file_report+="\033[0;31m-> $file ($size_human) [OVER LIMIT]\033[0m\n"
+            else
+                file_report+="   $file ($size_human)\n"
+            fi
+        fi
+    done
+
+    # 3. Multi-file Logic: If any file is > 50MB, abort and show report.
+    if [ "$#" -gt 1 ] && [ "$too_large" = true ]; then
+        echo -e "\e[31mMulti-file open aborted. One or more files exceed ${limit_mb}MB:\n\e[0m"
+        echo -e "$file_report"
+        return 1
+    fi
+
+    # 4. Single-file Logic: If the only file is > 50MB, use 'less'.
+    if [ "$#" -eq 1 ] && [ "$too_large" = true ]; then
+        local file="$1"
+        local size_bytes=$(stat -c%s "$file")
+        local size_human=$(numfmt --to=iec-i --suffix=B "$size_bytes")
+        
+        echo -e "\e[31mFile is too large for Neovim ($size_human).\e[0m"
+        echo "Opening with 'less' in 2 seconds..."
+        sleep 2
+        less "$file"
+        return
+    fi
+
+    # 5. Safe to proceed
+    command nvim "$@"
+}
 
 # Safer fzf alias (use function)
 fzf() {
