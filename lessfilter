@@ -1,0 +1,28 @@
+case $1 in
+  *.log)
+    sed -re $'
+      s/\\bfatal/\e[1;31m\\0\e[0m/i
+      s/\\berror/\e[31m\\0\e[0m/i
+      s/\\bfailed/\e[31m\\0\e[0m/i
+      s/\\bwarn(ing)?/\e[33m\\0\e[0m/i
+      s/\\bpass/\e[32m\\0\e[0m/i
+      s/\\binfo/\e[34m\\0\e[0m/i
+      s/\\bdebug[0-9]?/\e[36m\\0\e[0m/i
+    ' $1 ;; # A simpler log preprocessor
+    # exit 1 ;; # Some logs are really big and should be opened faster than source-highlight will do
+  *.pdl)
+    sed -re $'
+      s/\\biCall/\e[1;32m\\0\e[0m/i
+      s/\\biWrite/\e[1;34m\\0\e[0m/i
+      s/\\biProc/\e[1;35m\\0\e[0m/i
+      s/\\biNote/\e[38;5;214m\\0\e[0m/i
+    ' $1 ;;
+  *ChangeLog|*changelog) 
+    source-highlight -f esc --lang-def=changelog.lang --style-file=esc.style -i "$1" ;;
+  *Makefile|*makefile) 
+    source-highlight -f esc --lang-def=makefile.lang --style-file=esc.style -i "$1" ;;
+  *.do)
+    source-highlight -f esc --lang-def=tcl.lang --style-file=esc.style -i "$1" ;;
+  *)
+    source-highlight --infer-lang -f esc --style-file=esc.style -i "$1" ;;
+esac

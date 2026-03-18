@@ -25,7 +25,7 @@ alias nvs='nv -O'
 alias work='ssh -Y zb900042@lvnvda8240.lvn.broadcom.net'
 alias redhawk_results='/project/priest/master_scripts/user_scripts/parse_redhawk_sc_block_rpts.ftc.py'
 
-# safe nvim (any file over 50mb will automatically use less)
+# safe nvim (any file over 50mb will automatically use less/zless)
 nv() {
     # 1. No arguments? Just open nvim.
     if [ "$#" -eq 0 ]; then
@@ -38,38 +38,62 @@ nv() {
     local too_large=false
     local file_report=""
 
-    # 2. Check all provided files first
+    # 2. Pre-check all provided files (handling .gz expansion)
     for file in "$@"; do
         if [ -f "$file" ]; then
-            local size_bytes=$(stat -c%s "$file")
+            local size_bytes
+            local is_gz=false
+            
+            if [[ "$file" == *.gz ]]; then
+                # Get uncompressed size from gzip header
+                size_bytes=$(gzip -l "$file" | tail -n 1 | awk '{print $2}')
+                is_gz=true
+            else
+                size_bytes=$(stat -c%s "$file")
+            fi
+            
             local size_human=$(numfmt --to=iec-i --suffix=B "$size_bytes")
             
             if [ "$size_bytes" -gt "$limit_bytes" ]; then
                 too_large=true
-                file_report+="\033[0;31m-> $file ($size_human) [OVER LIMIT]\033[0m\n"
+                local label=$([ "$is_gz" = true ] && echo "uncompressed " || echo "")
+                file_report+="\e[31m-> $file ($size_human ${label})[OVER LIMIT]\e[0m\n"
             else
                 file_report+="   $file ($size_human)\n"
             fi
         fi
     done
 
-    # 3. Multi-file Logic: If any file is > 50MB, abort and show report.
+    # 3. Multi-file Logic: Abort if any file is > limit
     if [ "$#" -gt 1 ] && [ "$too_large" = true ]; then
-        echo -e "\e[31mMulti-file open aborted. One or more files exceed ${limit_mb}MB:\n\e[0m"
+        echo -e "\e[31mMulti-file open aborted. One or more files exceed ${limit_mb}MB:\e[0m\n"
         echo -e "$file_report"
         return 1
     fi
 
-    # 4. Single-file Logic: If the only file is > 50MB, use 'less'.
+    # 4. Single-file Logic: Auto-switch to less/zless
     if [ "$#" -eq 1 ] && [ "$too_large" = true ]; then
         local file="$1"
-        local size_bytes=$(stat -c%s "$file")
+        # Determine size again for the specific message
+        local size_bytes
+        if [[ "$file" == *.gz ]]; then
+            size_bytes=$(gzip -l "$file" | tail -n 1 | awk '{print $2}')
+        else
+            size_bytes=$(stat -c%s "$file")
+        fi
         local size_human=$(numfmt --to=iec-i --suffix=B "$size_bytes")
         
         echo -e "\e[31mFile is too large for Neovim ($size_human).\e[0m"
-        echo "Opening with 'less' in 2 seconds..."
-        sleep 2
-        less "$file"
+        
+        if [[ "$file" == *.gz ]]; then
+            echo "Opening with 'zless' in 2 seconds..."
+            sleep 2
+            less "$file"
+        else
+            echo "Opening with 'less' in 2 seconds..."
+            sleep 2
+            less "$file"
+        fi
         return
     fi
 

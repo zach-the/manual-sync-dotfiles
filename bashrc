@@ -20,6 +20,8 @@ shopt -s direxpand
 if [ -x /usr/bin/dircolors ]; then
     eval "$(dircolors -b ~/.dircolors 2>/dev/null || dircolors -b)"
 fi
+export LESS="-XR"
+export LESSCHARSET="utf-8"
 
 # --- Prompt & Tab Title ---
 # Only run this if the terminal supports colors and powerline-shell is installed
