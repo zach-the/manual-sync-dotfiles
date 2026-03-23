@@ -65,6 +65,7 @@ vim.o.statusline = table.concat({
 vim.o.number = true
 vim.o.relativenumber = true
 vim.o.showmatch = true
+vim.o.breakindent = true
 vim.o.wrap = false
 vim.o.smartcase = true
 vim.o.ignorecase = true
@@ -78,6 +79,15 @@ vim.o.termguicolors = true
 vim.o.cursorline = true
 vim.o.cursorcolumn = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+-- Create an autocommand for HTML files
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "html",
+  callback = function()
+    vim.opt_local.wrap = true      -- Enable wrapping
+    vim.opt_local.linebreak = true -- Wrap at words rather than mid-character
+  end,
+})
 
 -- Better up/down ------------------------------------------------------------
 vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
@@ -487,7 +497,7 @@ require("lazy").setup({
       "andrewferrier/wrapping.nvim",
       config = function()
         require("wrapping").setup({
-          softener = { markdown = true, text = true },
+          softener = { markdown = true, html = true, text = true },
           create_keymaps = true,
           keymaps = {
             motion = true,

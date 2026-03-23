@@ -11,9 +11,8 @@
 ####################################################################################################
 
 # --- Theme ---
-# ln -s ~/manual-sync-dotfiles/onehalf-dark-ghostty-zach /Applications/Ghostty.app/Contents/Resources/ghostty/themes/Zach\ One\ Half\ Dark
-# to see available themes use ghostty +list-themes
-theme = Zach One Half Dark
+# to see available themes use 'ghostty +list-themes'
+theme = Tinacious Design Dark
 keybind = cmd+shift+,=reload_config
 
 # --- Get Tab Title From SSH ---
