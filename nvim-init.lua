@@ -95,6 +95,16 @@ vim.keymap.set({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { desc = "Do
 vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
 vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
 
+-- Insert Mode: Better Arrow Keys (New)
+-- <C-o> lets us execute one Normal mode command and then returns to Insert mode
+vim.keymap.set('i', '<Down>', '<C-o>gj', { desc = "Down (display line)" })
+vim.keymap.set('i', '<Up>', '<C-o>gk', { desc = "Up (display line)" })
+
+-- Insert Mode: Alt+j/k for home-row navigation (New & Recommended)
+-- This allows you to stay on the home row while moving through wrapped lines
+vim.keymap.set('i', '<A-j>', '<C-o>gj', { desc = "Down (display line)" })
+vim.keymap.set('i', '<A-k>', '<C-o>gk', { desc = "Up (display line)" })
+
 -- Scroll 1/3 of the page instead of 1/2 fo the page -------------------------
 vim.keymap.set('n', '<C-d>', function()
   local step = math.floor(vim.api.nvim_win_get_height(0) / 3)
