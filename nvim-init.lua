@@ -70,6 +70,7 @@ vim.o.wrap = false
 vim.o.smartcase = true
 vim.o.ignorecase = true
 vim.o.hlsearch = true
+vim.o.clipboard = "unnamedplus"
 vim.o.scrolloff = 5
 vim.o.expandtab = true
 vim.o.shiftwidth = 4

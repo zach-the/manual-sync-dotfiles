@@ -7,27 +7,24 @@
 }
 
 window#waybar {
-  background: rgba(20, 20, 28, 0.55);
+  background: rgba(20, 20, 20, 0.55);
   color: #cdd6f4;
   border-radius: 10px;
 }
 
 #workspaces button {
   padding: 0 8px;
-  color: #6c7086;
+  color: #6c8898;
   background: transparent;
   transition: color 0.2s;
 }
 
 #workspaces button.active {
-  color: #cba6f7;
-}
-
-#workspaces button.urgent {
   color: #f38ba8;
 }
 
 #clock,
+#backlight,
 #battery,
 #network,
 #pulseaudio,
@@ -38,6 +35,10 @@ window#waybar {
 
 #clock {
   color: #89b4fa;
+}
+
+#backlight {
+  color: #94e2d5; /* A soft teal color */
 }
 
 #battery.warning {

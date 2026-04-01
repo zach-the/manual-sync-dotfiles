@@ -42,6 +42,7 @@ map ctrl+shift+l next_tab
 map alt+- launch --location=hsplit
 map alt+\ launch --location=vsplit 
 enabled_layouts splits
+map alt+= resize_window reset
 map ctrl+shift+1 goto_tab 1
 map ctrl+shift+2 goto_tab 2
 map ctrl+shift+3 goto_tab 3

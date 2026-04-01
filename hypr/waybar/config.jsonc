@@ -7,19 +7,30 @@
   "margin-left": 8,
   "margin-right": 8,
 
-  "modules-left": ["hyprland/workspaces"],
-  "modules-center": ["clock"],
-  "modules-right": ["pulseaudio", "network", "battery"], //tray was here, but i removed it. look into optimizing that and figurig out system76-power later
+  "modules-center": ["hyprland/workspaces"],
+  "modules-left": ["clock"],
+  "modules-right": ["pulseaudio", "backlight", "network", "battery"], //tray was here, but i removed it. look into optimizing that and figurig out system76-power later
 
   "hyprland/workspaces": {
     "format": "{icon}",
     "on-click": "activate",
     "format-icons": {
-      "active": "●",
-      "default": "○",
-      "urgent": "!"
+      "default": "●"
     },
-    "sort-by-number": true
+    "persistent-workspaces": {
+      "eDP-1": [1, 2, 3],
+      // This captures your second monitor regardless of its name
+      // If you always want 11-13 on the second display:
+      "*": [11, 12, 13] 
+    }
+  },
+
+  "backlight": {
+    "device": "intel_backlight", // Replace with your GPU (e.g., "amdgpu_bl0") if it doesn't work
+    "format": "Lum: {percent}%",
+    "on-scroll-up": "brightnessctl set 1%+",
+    "on-scroll-down": "brightnessctl set 1%-",
+    "tooltip": false
   },
 
   "clock": {
