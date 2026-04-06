@@ -11,16 +11,11 @@ current_ws=$(echo "$active_ws_info" | jq -r '.id')
 
 # 2. Determine Monitor Index (0 = Leftmost, 1 = Next, etc.)
 # Sorting by X coordinate is essential for your dual-state (UT/CO) setup
-prefix=0
-monitors_sorted=$(hyprctl monitors -j | jq -r 'sort_by(.x) | .[].name')
-for mon in $monitors_sorted; do
-    if [ "$mon" == "$current_mon_name" ]; then
-        break
-    fi
-    ((prefix++))
-done
-
-base=$(( prefix * 10 ))
+if [ "$current_mon_name" == "eDP-1" ]; then
+    base=0
+else
+    base=10
+fi
 
 # 3. Determine 'sub' by looking at the LAST digit of the workspace
 # This prevents Workspace 1 from breaking the logic on Monitor 1
