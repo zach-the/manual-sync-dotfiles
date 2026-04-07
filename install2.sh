@@ -1,0 +1,32 @@
+#!/bin/bash
+
+echo "linking nvim init.lua"
+mkdir -p ~/.config/nvim
+[ -f ~/.config/nvim/init.lua ] && mv ~/.config/nvim/init.lua{,.old}
+ln -s ~/manual-sync-dotfiles/nvim-init.lua ~/.config/nvim/init.lua
+
+echo "linking bash stuff"
+[ -f ~/.bashrc ] && mv ~/.bashrc{,.old}
+[ -f ~/.bash_aliases ] && mv ~/.bash_aliases{,.old}
+ln -s ~/manual-sync-dotfiles/bashrc ~/.bashrc
+ln -s ~/manual-sync-dotfiles/bash_aliases ~/.bash_aliases
+
+echo "linking kitty conf"
+mkdir -p ~/.config/kitty
+[ -f ~/.config/kitty/kitty.conf ] && mv ~/.config/kitty/kitty.conf{,.old}
+ln -s ~/manual-sync-dotfiles/kitty-conf ~/.config/kitty/kitty.conf
+git clone https://github.com/kovidgoyal/kitty-themes.git ~/kitty-themes > /dev/null 2>&1
+rm -rf ~/.config/kitty/themes
+mv ~/kitty-themes/themes ~/.config/kitty/themes
+[ -f ~/.config/kitty/theme.conf ] && mv ~/.config/kitty/theme.conf{,.old}
+ln -s ~/.config/kitty/themes/Molokai.conf ~/.config/kitty/theme.conf
+rm -rf ~/kitty-themes
+
+echo "linking waybar"
+[ -d ~/.config/waybar ] && mv ~/.config/waybar{,.old}
+ln -s ~/manual-sync-dotfiles/waybar ~/.config/waybar
+
+echo "linking mpv conf"
+mkdir -p ~/.config/mpv
+[ -f ~/.config/mpv/mpv.conf ] && mv ~/.config/mpv/mpv.conf{,.old}
+
