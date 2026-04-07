@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=archlogo
+Description=Arch Logo
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/archlogo
+ScriptFile=/usr/share/plymouth/themes/archlogo/archlogo.script
