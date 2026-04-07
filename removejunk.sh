@@ -4,4 +4,5 @@ rm .bash_aliases.old
 rm .config/kitty/kitty.conf.old
 rm .config/kitty/theme.conf.old
 rm .config/mpv/mpv.old
+rm .config/powerline-shell/config.json.old
 rm -rf .config/waybar.old

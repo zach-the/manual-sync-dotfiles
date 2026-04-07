@@ -30,3 +30,13 @@ echo "linking mpv conf"
 mkdir -p ~/.config/mpv
 [ -f ~/.config/mpv/mpv.conf ] && mv ~/.config/mpv/mpv.conf{,.old}
 
+echo "installing powerline-shell"
+sudo pacman -S python-setuptools
+git clone https://github.com/b-ryan/powerline-shell ~/powerline-shell
+cd ~/powerline-shell
+sudo python setup.py install
+mkdir -p ~/.config/powerline-shell
+[ -f ~/.config/powerline-shell/config.json ] && mv ~/.config/powerline-shell/config.json{,.old}
+ln -s ~/manual-sync-dotfiles/powerline-shell.config.json ~/.config/powerline-shell/config.json
+sudo rm -rf ~/powerline-shell
+
