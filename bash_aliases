@@ -24,8 +24,9 @@ alias lg='ls -lrga | rg -i'
 alias nvs='nv -O'
 alias work='ssh -Y zb900042@lvnvda8240.lvn.broadcom.net'
 alias redhawk_results='/project/priest/master_scripts/user_scripts/parse_redhawk_sc_block_rpts.ftc.py'
+alias kickoff_cursor='/Users/zb900042/toolbox/cursor_kickoff_mac.sh'
 
-# safe nvim (any file over 50mb will automatically use less/zless)
+# safe nvim (files over 50mb automatically use less)
 nv() {
     # 1. No arguments? Just open nvim.
     if [ "$#" -eq 0 ]; then
@@ -38,23 +39,33 @@ nv() {
     local too_large=false
     local file_report=""
 
-    # 2. Pre-check all provided files (handling .gz expansion)
+    # 2. Pre-check all provided files
     for file in "$@"; do
         if [ -f "$file" ]; then
-            local size_bytes
+            local size_bytes=0
             local is_gz=false
             
             if [[ "$file" == *.gz ]]; then
-                # Get uncompressed size from gzip header
                 size_bytes=$(gzip -l "$file" | tail -n 1 | awk '{print $2}')
                 is_gz=true
             else
-                size_bytes=$(stat -c%s "$file")
+                # Portable stat for macOS and Linux
+                if stat --version >/dev/null 2>&1; then
+                    size_bytes=$(stat -c%s "$file") # GNU/Linux
+                else
+                    size_bytes=$(stat -f%z "$file") # BSD/macOS
+                fi
             fi
             
-            local size_human=$(numfmt --to=iec-i --suffix=B "$size_bytes")
+            # Fallback for numfmt using awk (since macOS lacks numfmt)
+            local size_human=$(awk -v size="$size_bytes" 'BEGIN {
+                split("B KB MB GB TB", unit);
+                i=1; while (size>=1024 && i<5) {size/=1024; i++}
+                printf "%.1f%s", size, unit[i]
+            }')
             
-            if [ "$size_bytes" -gt "$limit_bytes" ]; then
+            # Safety check: ensure size_bytes is a number before comparing
+            if [ "${size_bytes:-0}" -gt "$limit_bytes" ]; then
                 too_large=true
                 local label=$([ "$is_gz" = true ] && echo "uncompressed " || echo "")
                 file_report+="\e[31m-> $file ($size_human ${label})[OVER LIMIT]\e[0m\n"
@@ -64,36 +75,19 @@ nv() {
         fi
     done
 
-    # 3. Multi-file Logic: Abort if any file is > limit
+    # 3. Multi-file Logic
     if [ "$#" -gt 1 ] && [ "$too_large" = true ]; then
         echo -e "\e[31mMulti-file open aborted. One or more files exceed ${limit_mb}MB:\e[0m\n"
         echo -e "$file_report"
         return 1
     fi
 
-    # 4. Single-file Logic: Auto-switch to less/zless
+    # 4. Single-file Logic: Auto-switch to less
     if [ "$#" -eq 1 ] && [ "$too_large" = true ]; then
-        local file="$1"
-        # Determine size again for the specific message
-        local size_bytes
-        if [[ "$file" == *.gz ]]; then
-            size_bytes=$(gzip -l "$file" | tail -n 1 | awk '{print $2}')
-        else
-            size_bytes=$(stat -c%s "$file")
-        fi
-        local size_human=$(numfmt --to=iec-i --suffix=B "$size_bytes")
-        
         echo -e "\e[31mFile is too large for Neovim ($size_human).\e[0m"
-        
-        if [[ "$file" == *.gz ]]; then
-            echo "Opening with 'zless' in 2 seconds..."
-            sleep 2
-            less "$file"
-        else
-            echo "Opening with 'less' in 2 seconds..."
-            sleep 2
-            less "$file"
-        fi
+        echo "Opening with 'less' in 2 seconds..."
+        sleep 2
+        less "$1"
         return
     fi
 
