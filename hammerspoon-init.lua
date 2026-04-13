@@ -29,6 +29,62 @@ local hyper = {"ctrl", "alt", "cmd", "shift"}
 --==============================================================================--
 
 -- =====================================================================
+-- STRICT PER-SCREEN SPACE SWITCHING
+-- =====================================================================
+
+local function switchSpace(direction)
+    local focusedScreen = hs.screen.mainScreen()
+    local allScreens = hs.screen.allScreens()
+    local currentScreenSpaces = hs.spaces.spacesForScreen(focusedScreen)
+    local activeSpace = hs.spaces.activeSpaceOnScreen(focusedScreen)
+
+    -- 1. Create a global list of all spaces to find the "Shortcut Number"
+    -- macOS assigns Ctrl+1, Ctrl+2, etc., based on the order in this list
+    local globalSpaces = {}
+    for _, screen in ipairs(allScreens) do
+        local screenSpaces = hs.spaces.spacesForScreen(screen)
+        for _, spaceID in ipairs(screenSpaces) do
+            table.insert(globalSpaces, spaceID)
+        end
+    end
+
+    -- 2. Find the current space's index in the LOCAL screen list
+    local localIndex = nil
+    for i, spaceID in ipairs(currentScreenSpaces) do
+        if spaceID == activeSpace then
+            localIndex = i
+            break
+        end
+    end
+
+    if not localIndex then return end
+
+    -- 3. Determine the target LOCAL index
+    local targetLocalIndex = (direction == "next") and (localIndex + 1) or (localIndex - 1)
+
+    -- 4. Boundary Check: Only proceed if the target is on the SAME screen
+    if targetLocalIndex > 0 and targetLocalIndex <= #currentScreenSpaces then
+        local targetSpaceID = currentScreenSpaces[targetLocalIndex]
+        
+        -- 5. Map the target Space ID back to the GLOBAL index for the keystroke
+        local globalIndex = nil
+        for i, spaceID in ipairs(globalSpaces) do
+            if spaceID == targetSpaceID then
+                globalIndex = i
+                break
+            end
+        end
+
+        if globalIndex and globalIndex <= 9 then
+            hs.eventtap.keyStroke({"ctrl"}, tostring(globalIndex))
+        end
+    else
+        -- Optional: Provide a small visual hint that you've hit the edge of the monitor
+        hs.alert.show("Edge of screen", 0.5)
+    end
+end
+
+-- =====================================================================
 -- DIRECTIONAL FOCUS
 -- =====================================================================
 local function moveMouseToWindow(win)
@@ -392,6 +448,11 @@ end
 -- |_|\_\___|\__, |_.__/|_|_| |_|\__,_|___/ --
 --           |___/                          --
 --==========================================--
+
+-- Bind to Hyper + H (Left) and Hyper + L (Right)
+hs.hotkey.bind(hyper, "H", function() switchSpace("prev") end)
+hs.hotkey.bind(hyper, "L", function() switchSpace("next") end)
+
 -- Halves
 hs.hotkey.bind(hyper, "A", move(0, 0, 0.5, 1))      -- Left Half
 hs.hotkey.bind(hyper, "D", move(0.5, 0, 0.5, 1))    -- Right Half
@@ -440,75 +501,11 @@ hs.hotkey.bind({"cmd", "alt"}, "J", function() smartFocus("South") end)
 hs.hotkey.bind(hyper, "T", launchGhostty)
 hs.hotkey.bind(hyper, "N", launchChrome)
 
-
 -- =====================================================================
 -- CONFIG LOADED MESSAGE
 -- =====================================================================
 hs.hotkey.bind(hyper, "Z", function()               -- Reload Config
   hs.reload()
 end)
-
-
--- =====================================================================
--- STRICT PER-SCREEN SPACE SWITCHING
--- =====================================================================
-
-local function switchSpace(direction)
-    local focusedScreen = hs.screen.mainScreen()
-    local allScreens = hs.screen.allScreens()
-    local currentScreenSpaces = hs.spaces.spacesForScreen(focusedScreen)
-    local activeSpace = hs.spaces.activeSpaceOnScreen(focusedScreen)
-
-    -- 1. Create a global list of all spaces to find the "Shortcut Number"
-    -- macOS assigns Ctrl+1, Ctrl+2, etc., based on the order in this list
-    local globalSpaces = {}
-    for _, screen in ipairs(allScreens) do
-        local screenSpaces = hs.spaces.spacesForScreen(screen)
-        for _, spaceID in ipairs(screenSpaces) do
-            table.insert(globalSpaces, spaceID)
-        end
-    end
-
-    -- 2. Find the current space's index in the LOCAL screen list
-    local localIndex = nil
-    for i, spaceID in ipairs(currentScreenSpaces) do
-        if spaceID == activeSpace then
-            localIndex = i
-            break
-        end
-    end
-
-    if not localIndex then return end
-
-    -- 3. Determine the target LOCAL index
-    local targetLocalIndex = (direction == "next") and (localIndex + 1) or (localIndex - 1)
-
-    -- 4. Boundary Check: Only proceed if the target is on the SAME screen
-    if targetLocalIndex > 0 and targetLocalIndex <= #currentScreenSpaces then
-        local targetSpaceID = currentScreenSpaces[targetLocalIndex]
-        
-        -- 5. Map the target Space ID back to the GLOBAL index for the keystroke
-        local globalIndex = nil
-        for i, spaceID in ipairs(globalSpaces) do
-            if spaceID == targetSpaceID then
-                globalIndex = i
-                break
-            end
-        end
-
-        if globalIndex and globalIndex <= 9 then
-            hs.eventtap.keyStroke({"ctrl"}, tostring(globalIndex))
-        end
-    else
-        -- Optional: Provide a small visual hint that you've hit the edge of the monitor
-        hs.alert.show("Edge of screen", 0.5)
-    end
-end
-
--- Bind to Hyper + H (Left) and Hyper + L (Right)
-hs.hotkey.bind(hyper, "H", function() switchSpace("prev") end)
-hs.hotkey.bind(hyper, "L", function() switchSpace("next") end)
-
-
 
 hs.alert.show("Hammerspoon Config Loaded")
