@@ -24,7 +24,7 @@ macos-option-as-alt = true
 # --- Font ---
 font-thicken = true
 font-family = "JetBrainsMono Nerd Font Mono"
-font-size = 14
+font-size = 12
 
 # --- Appearance ---
 # window-width = 160
