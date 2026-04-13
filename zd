@@ -3,6 +3,8 @@ import sys
 import subprocess
 import difflib
 import shutil
+import re
+import fnmatch
 
 RESET = '\033[0m'
 RED = '\033[31m'
@@ -12,6 +14,27 @@ PURPLE = '\033[35m'
 DIM = '\033[2m'
 BOLD = '\033[1m'
 CYAN = '\033[36m'
+
+# Add your regex patterns here to ignore specific files/directories
+# e.g., r'\.git/.*', r'.*\.pyc'
+EXCLUDE_PATTERNS = [
+    r'.*\.git/.*',
+    r'.*\.pyc',
+    r'.*def',
+    r'.*log',
+    r'.*rpt',
+    # r'.*\.shadow.*',
+    r'.*csv',
+    r'.*eco.\.tcl',
+]
+
+compiled_excludes = []
+for p in EXCLUDE_PATTERNS:
+    try:
+        compiled_excludes.append(re.compile(p))
+    except re.error:
+        # If it's not a valid regex (like a shell glob), convert it
+        compiled_excludes.append(re.compile(fnmatch.translate(p)))
 
 def get_terminal_width():
     return shutil.get_terminal_size((80, 24)).columns
@@ -70,8 +93,14 @@ def process_diff(iterable):
 
     old_block = []
     new_block = []
+    skip_current_file = False
 
     def flush_blocks():
+        if skip_current_file:
+            old_block.clear()
+            new_block.clear()
+            return
+            
         if not old_block and not new_block:
             return
             
@@ -123,9 +152,15 @@ def process_diff(iterable):
             if len(parts) >= 3:
                 f1 = parts[-2]
                 f2 = parts[-1]
+                skip_current_file = any(p.search(f1) or p.search(f2) for p in compiled_excludes)
+                if skip_current_file:
+                    continue
                 sys.stdout.write(f"\n{BLUE}{BOLD}FILE: {f1} <-> {f2}{RESET}\n")
             else:
+                skip_current_file = False
                 sys.stdout.write(f"\n{BLUE}{BOLD}{line}{RESET}\n")
+        elif skip_current_file:
+            continue
         elif line.startswith('@@ '):
             flush_blocks()
             parts = line.split('@@')
