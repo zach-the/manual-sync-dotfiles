@@ -10,6 +10,7 @@ alias fzd='tmp=$(fd --type d -d 4 | fzf) && echo $tmp && d $tmp'
 alias e='clear && exit'
 alias ll='ls -lrt'
 alias la='ls -la'
+alias zd='~/manual-sync-dotfiles/zd'
 alias dir='dir --color=auto'
 alias vdir='vdir --color=auto'
 alias fgrep='fgrep --color=auto'
@@ -127,42 +128,42 @@ md() {
     fi
 }
 
-# --- to easily diff two directories ---
-zd ()
-{ 
-    if [[ -z "$2" ]]; then
-        echo "you need 2 arguments";
-        return 0;
-    fi;
-
-    diff -r -y --suppress-common-lines -W $(tput cols) \
-        --exclude="*def" --exclude="eco?.tcl" --exclude="*csv" \
-        --exclude="*log" --exclude="*rpt" --exclude="*\.shadow*" --expand-tabs "$1" "$2" | \
-        # This sed captures the last two space-separated strings (the paths) 
-        # on lines starting with 'diff'
-        sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
-        rg -v "Common\ subdirectories" | \
-        # The -- tells rg that "FILE:" is a pattern, not a flag
-        rg --color=always -- "FILE:.*|Only in |$" 
-}
-# --- same as above, but this one allows you to diff with a .shadow/ directory ---
-zd_with_shadow ()
-{ 
-    if [[ -z "$2" ]]; then
-        echo "you need 2 arguments";
-        return 0;
-    fi;
-
-    diff -r -y --suppress-common-lines -W $(tput cols) \
-        --exclude="*def" --exclude="eco?.tcl" --exclude="*csv" \
-        --exclude="*log" --exclude="*rpt" --expand-tabs "$1" "$2" | \
-        # This sed captures the last two space-separated strings (the paths) 
-        # on lines starting with 'diff'
-        sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
-        rg -v "Common\ subdirectories" | \
-        # The -- tells rg that "FILE:" is a pattern, not a flag
-        rg --color=always -- "FILE:.*|Only in .*|$" 
-}
+# # --- to easily diff two directories ---
+# zd ()
+# { 
+#     if [[ -z "$2" ]]; then
+#         echo "you need 2 arguments";
+#         return 0;
+#     fi;
+# 
+#     diff -r -y --suppress-common-lines -W $(tput cols) \
+#         --exclude="*def" --exclude="eco?.tcl" --exclude="*csv" \
+#         --exclude="*log" --exclude="*rpt" --exclude="*\.shadow*" --expand-tabs "$1" "$2" | \
+#         # This sed captures the last two space-separated strings (the paths) 
+#         # on lines starting with 'diff'
+#         sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
+#         rg -v "Common\ subdirectories" | \
+#         # The -- tells rg that "FILE:" is a pattern, not a flag
+#         rg --color=always -- "FILE:.*|Only in |$" 
+# }
+# # --- same as above, but this one allows you to diff with a .shadow/ directory ---
+# zd_with_shadow ()
+# { 
+#     if [[ -z "$2" ]]; then
+#         echo "you need 2 arguments";
+#         return 0;
+#     fi;
+# 
+#     diff -r -y --suppress-common-lines -W $(tput cols) \
+#         --exclude="*def" --exclude="eco?.tcl" --exclude="*csv" \
+#         --exclude="*log" --exclude="*rpt" --expand-tabs "$1" "$2" | \
+#         # This sed captures the last two space-separated strings (the paths) 
+#         # on lines starting with 'diff'
+#         sed -E 's/^diff .* ([^ ]+) ([^ ]+)$/FILE: \1 <-> \2/' | \
+#         rg -v "Common\ subdirectories" | \
+#         # The -- tells rg that "FILE:" is a pattern, not a flag
+#         rg --color=always -- "FILE:.*|Only in .*|$" 
+# }
 
 qcursor_ssh_start () {
     cd /project/priest_4/giant/giant-2025.7.2/user/zb900042/PN99.0.LIB1.fp17.23Oct2025.dft.251025/impl/broadcom_cloud_noncritical_zb900042/
