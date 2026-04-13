@@ -24,6 +24,7 @@ alias nvs='nv -O'
 alias work='ssh -Y zb900042@lvnvda8240.lvn.broadcom.net'
 alias redhawk_results='/project/priest/master_scripts/user_scripts/parse_redhawk_sc_block_rpts.ftc.py'
 alias kickoff_cursor='/Users/zb900042/toolbox/cursor_kickoff_mac.sh'
+alias strip_newlines="paste -s -d ' ' -"
 
 # safe nvim (files over 50mb automatically use less)
 nv() {
