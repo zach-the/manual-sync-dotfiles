@@ -29,7 +29,7 @@ local hyper = {"ctrl", "alt", "cmd", "shift"}
 --==============================================================================--
 
 -- =====================================================================
--- STRICT PER-SCREEN SPACE SWITCHING
+-- PER-SCREEN SPACE SWITCHING (WITH WRAP-AROUND)
 -- =====================================================================
 
 local function switchSpace(direction)
@@ -39,7 +39,7 @@ local function switchSpace(direction)
     local activeSpace = hs.spaces.activeSpaceOnScreen(focusedScreen)
 
     -- 1. Create a global list of all spaces to find the "Shortcut Number"
-    -- macOS assigns Ctrl+1, Ctrl+2, etc., based on the order in this list
+    -- This ensures we hit the right Ctrl + N combination
     local globalSpaces = {}
     for _, screen in ipairs(allScreens) do
         local screenSpaces = hs.spaces.spacesForScreen(screen)
@@ -59,28 +59,36 @@ local function switchSpace(direction)
 
     if not localIndex then return end
 
-    -- 3. Determine the target LOCAL index
-    local targetLocalIndex = (direction == "next") and (localIndex + 1) or (localIndex - 1)
-
-    -- 4. Boundary Check: Only proceed if the target is on the SAME screen
-    if targetLocalIndex > 0 and targetLocalIndex <= #currentScreenSpaces then
-        local targetSpaceID = currentScreenSpaces[targetLocalIndex]
-        
-        -- 5. Map the target Space ID back to the GLOBAL index for the keystroke
-        local globalIndex = nil
-        for i, spaceID in ipairs(globalSpaces) do
-            if spaceID == targetSpaceID then
-                globalIndex = i
-                break
-            end
-        end
-
-        if globalIndex and globalIndex <= 9 then
-            hs.eventtap.keyStroke({"ctrl"}, tostring(globalIndex))
+    -- 3. Calculate target LOCAL index with WRAP-AROUND logic
+    local targetLocalIndex
+    if direction == "next" then
+        targetLocalIndex = localIndex + 1
+        if targetLocalIndex > #currentScreenSpaces then
+            targetLocalIndex = 1 -- Wrap to first desktop
         end
     else
-        -- Optional: Provide a small visual hint that you've hit the edge of the monitor
-        hs.alert.show("Edge of screen", 0.5)
+        targetLocalIndex = localIndex - 1
+        if targetLocalIndex < 1 then
+            targetLocalIndex = #currentScreenSpaces -- Wrap to last desktop
+        end
+    end
+
+    -- 4. Map the target Space ID back to the GLOBAL index for the keystroke
+    local targetSpaceID = currentScreenSpaces[targetLocalIndex]
+    local globalIndex = nil
+    for i, spaceID in ipairs(globalSpaces) do
+        if spaceID == targetSpaceID then
+            globalIndex = i
+            break
+        end
+    end
+
+    -- 5. Trigger the jump
+    if globalIndex and globalIndex <= 9 then
+        hs.eventtap.keyStroke({"ctrl"}, tostring(globalIndex))
+    else
+        -- Fallback: If you have > 9 spaces, the Ctrl+N shortcuts don't exist
+        hs.alert.show("Space index out of shortcut range (1-9)")
     end
 end
 
