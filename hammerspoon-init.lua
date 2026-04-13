@@ -28,69 +28,6 @@ local hyper = {"ctrl", "alt", "cmd", "shift"}
 --              |_|                                                             --
 --==============================================================================--
 
--- =====================================================================
--- PER-SCREEN SPACE SWITCHING (WITH WRAP-AROUND)
--- =====================================================================
-
-local function switchSpace(direction)
-    local focusedScreen = hs.screen.mainScreen()
-    local allScreens = hs.screen.allScreens()
-    local currentScreenSpaces = hs.spaces.spacesForScreen(focusedScreen)
-    local activeSpace = hs.spaces.activeSpaceOnScreen(focusedScreen)
-
-    -- 1. Create a global list of all spaces to find the "Shortcut Number"
-    -- This ensures we hit the right Ctrl + N combination
-    local globalSpaces = {}
-    for _, screen in ipairs(allScreens) do
-        local screenSpaces = hs.spaces.spacesForScreen(screen)
-        for _, spaceID in ipairs(screenSpaces) do
-            table.insert(globalSpaces, spaceID)
-        end
-    end
-
-    -- 2. Find the current space's index in the LOCAL screen list
-    local localIndex = nil
-    for i, spaceID in ipairs(currentScreenSpaces) do
-        if spaceID == activeSpace then
-            localIndex = i
-            break
-        end
-    end
-
-    if not localIndex then return end
-
-    -- 3. Calculate target LOCAL index with WRAP-AROUND logic
-    local targetLocalIndex
-    if direction == "next" then
-        targetLocalIndex = localIndex + 1
-        if targetLocalIndex > #currentScreenSpaces then
-            targetLocalIndex = 1 -- Wrap to first desktop
-        end
-    else
-        targetLocalIndex = localIndex - 1
-        if targetLocalIndex < 1 then
-            targetLocalIndex = #currentScreenSpaces -- Wrap to last desktop
-        end
-    end
-
-    -- 4. Map the target Space ID back to the GLOBAL index for the keystroke
-    local targetSpaceID = currentScreenSpaces[targetLocalIndex]
-    local globalIndex = nil
-    for i, spaceID in ipairs(globalSpaces) do
-        if spaceID == targetSpaceID then
-            globalIndex = i
-            break
-        end
-    end
-
-    -- 5. Trigger the jump
-    if globalIndex and globalIndex <= 9 then
-        hs.eventtap.keyStroke({"ctrl"}, tostring(globalIndex))
-    else
-        -- Fallback: If you have > 9 spaces, the Ctrl+N shortcuts don't exist
-        hs.alert.show("Space index out of shortcut range (1-9)")
-    end
-end
 
 -- =====================================================================
 -- DIRECTIONAL FOCUS
@@ -516,4 +453,131 @@ hs.hotkey.bind(hyper, "Z", function()               -- Reload Config
   hs.reload()
 end)
 
+
+
+
 hs.alert.show("Hammerspoon Config Loaded")
+
+
+-- =====================================================================
+-- FAST MULTI-MONITOR SPACE SWITCHING (Primary -> Externals -> Built-in)
+-- =====================================================================
+
+local function getMacOSScreenOrder()
+    local screens = hs.screen.allScreens()
+    local primary = hs.screen.primaryScreen()
+    
+    local orderedScreens = { primary }
+    local externals = {}
+    local builtIns = {}
+    
+    -- Separate the secondary screens into Externals and Built-ins
+    for _, screen in ipairs(screens) do
+        if screen:id() ~= primary:id() then
+            -- We identify the laptop screen by its standard macOS naming convention
+            if string.match(screen:name(), "Built%-in") then
+                table.insert(builtIns, screen)
+            else
+                table.insert(externals, screen)
+            end
+        end
+    end
+    
+    -- Sort multiple externals geometrically (just in case you add a 3rd external monitor later)
+    table.sort(externals, function(a, b) return a:frame().x < b:frame().x end)
+    
+    -- Construct the final list: Primary -> Externals -> Built-ins
+    for _, screen in ipairs(externals) do table.insert(orderedScreens, screen) end
+    for _, screen in ipairs(builtIns) do table.insert(orderedScreens, screen) end
+    
+    -- =====================================================
+    -- DEBUG OUTPUT START (Bound to Hyper + P)
+    -- =====================================================
+    -- Feel free to delete this block once everything works perfectly
+    -- =====================================================
+    return orderedScreens
+end
+
+-- Full X-RAY Debugger (Press Hyper + P to verify)
+hs.hotkey.bind(hyper, "P", function()
+    local orderedScreens = getMacOSScreenOrder()
+    local focusedScreen = hs.screen.mainScreen()
+    
+    local msg = "=== SPACES X-RAY ===\n\n"
+    local globalCounter = 1
+    
+    for screenIndex, screen in ipairs(orderedScreens) do
+        local isPrimary = (screen:id() == hs.screen.primaryScreen():id()) and " [PRIMARY]" or ""
+        local isFocused = (screen:id() == focusedScreen:id()) and " [FOCUSED]" or ""
+        
+        msg = msg .. "Screen " .. screenIndex .. isPrimary .. isFocused .. "\n"
+        msg = msg .. "Name: " .. screen:name() .. "\n"
+        
+        local screenSpaces = hs.spaces.spacesForScreen(screen)
+        local activeSpace = hs.spaces.activeSpaceOnScreen(screen)
+        
+        if screenSpaces then
+            for _, spaceID in ipairs(screenSpaces) do
+                local activeMark = (spaceID == activeSpace) and "  <-- ACTIVE" or ""
+                msg = msg .. "  -> Space ID: " .. spaceID .. "  |  Maps to: ^" .. globalCounter .. activeMark .. "\n"
+                globalCounter = globalCounter + 1
+            end
+        else
+            msg = msg .. "  -> No spaces found.\n"
+        end
+        msg = msg .. "\n"
+    end
+    
+    print(msg)
+    hs.alert.show(msg, 8)
+end)
+
+-- =====================================================================
+-- THE SWITCHING LOGIC (Hard Boundaries, No Wrap-Around)
+-- =====================================================================
+local function switchSpace(direction)
+    local focusedScreen = hs.screen.mainScreen()
+    local orderedScreens = getMacOSScreenOrder()
+    local activeSpace = hs.spaces.activeSpaceOnScreen(focusedScreen)
+    local localSpaces = hs.spaces.spacesForScreen(focusedScreen)
+    
+    local globalSpaces = {}
+    for _, screen in ipairs(orderedScreens) do
+        local screenSpaces = hs.spaces.spacesForScreen(screen)
+        if screenSpaces then
+            for _, spaceID in ipairs(screenSpaces) do
+                table.insert(globalSpaces, spaceID)
+            end
+        end
+    end
+    
+    local localIndex = nil
+    for i, spaceID in ipairs(localSpaces) do
+        if spaceID == activeSpace then
+            localIndex = i
+            break
+        end
+    end
+    if not localIndex then return end
+    
+    local targetLocalIndex = localIndex + (direction == "next" and 1 or -1)
+    
+    -- Hard Wall
+    if targetLocalIndex < 1 or targetLocalIndex > #localSpaces then return end
+    
+    local targetSpaceID = localSpaces[targetLocalIndex]
+    local targetGlobalIndex = nil
+    for i, spaceID in ipairs(globalSpaces) do
+        if spaceID == targetSpaceID then
+            targetGlobalIndex = i
+            break
+        end
+    end
+    
+    if targetGlobalIndex and targetGlobalIndex <= 9 then
+        hs.eventtap.keyStroke({"ctrl"}, tostring(targetGlobalIndex))
+    end
+end
+
+hs.hotkey.bind(hyper, "H", function() switchSpace("prev") end)
+hs.hotkey.bind(hyper, "L", function() switchSpace("next") end)
