@@ -501,7 +501,7 @@ end
 -- Full X-RAY Debugger (Press Hyper + P to verify)
 hs.hotkey.bind(hyper, "P", function()
     local orderedScreens = getMacOSScreenOrder()
-    local focusedScreen = hs.screen.mainScreen()
+    local focusedScreen = hs.mouse.getCurrentScreen()
     
     local msg = "=== SPACES X-RAY ===\n\n"
     local globalCounter = 1
@@ -536,7 +536,7 @@ end)
 -- THE SWITCHING LOGIC (Hard Boundaries, No Wrap-Around)
 -- =====================================================================
 local function switchSpace(direction)
-    local focusedScreen = hs.screen.mainScreen()
+    local focusedScreen = hs.mouse.getCurrentScreen()
     local orderedScreens = getMacOSScreenOrder()
     local activeSpace = hs.spaces.activeSpaceOnScreen(focusedScreen)
     local localSpaces = hs.spaces.spacesForScreen(focusedScreen)
