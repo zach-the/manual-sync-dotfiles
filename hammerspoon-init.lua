@@ -446,6 +446,19 @@ hs.hotkey.bind({"cmd", "alt"}, "J", function() smartFocus("South") end)
 hs.hotkey.bind(hyper, "T", launchGhostty)
 hs.hotkey.bind(hyper, "N", launchChrome)
 
+-- 1. Create the hotkey but don't enable it yet
+local stopCmdH = hs.hotkey.new({"cmd"}, "h", function() end)
+
+-- 2. Toggle it based on whether TigerVNC is focused
+hs.window.filter.default:subscribe(hs.window.filter.windowFocused, function(win)
+    local appName = win:application():title()
+    if appName:find("TigerVNC") then
+        stopCmdH:disable() -- Let TigerVNC "see" the key
+    else
+        stopCmdH:enable()  -- Block it for everyone else
+    end
+end)
+
 -- =====================================================================
 -- CONFIG LOADED MESSAGE
 -- =====================================================================
