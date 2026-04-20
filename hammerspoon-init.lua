@@ -443,8 +443,8 @@ hs.hotkey.bind({"cmd", "alt"}, "K", function() smartFocus("North") end)
 hs.hotkey.bind({"cmd", "alt"}, "J", function() smartFocus("South") end)
 
 -- Ghostty and Chrome
-hs.hotkey.bind(hyper, "T", launchGhostty)
-hs.hotkey.bind(hyper, "N", launchChrome)
+-- hs.hotkey.bind(hyper, "T", launchGhostty)
+-- hs.hotkey.bind(hyper, "N", launchChrome)
 
 -- 1. Create the hotkey but don't enable it yet
 local stopCmdH = hs.hotkey.new({"cmd"}, "h", function() end)
